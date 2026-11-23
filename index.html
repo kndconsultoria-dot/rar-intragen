@@ -197,6 +197,11 @@ body.apresentando main{padding-bottom:60px}
 .pr{border-radius:14px;padding:4px 10px;font-size:12.5px;text-align:center;font-weight:600}.pr.cp{background:#e3f1fa;color:var(--verde2)}.pr.cx{background:#e0f2ef;color:var(--pos)}
 .h4{margin:0 0 6px;color:var(--verde);font-size:14px}
 @media print{.abas{display:none}.troca{display:none}}
+.slide.fantasma{border:3px dashed #9fb0bf;background:#fbfcfd;opacity:.97}
+.fx{background:#14283B;color:#fff;font-size:12.5px;padding:6px 34px;border-radius:4px 4px 0 0}
+.pk{white-space:pre-wrap;font:11px/1.4 ui-monospace,Consolas,monospace;background:#f2f5f8;border:1px solid var(--linha);border-radius:6px;padding:10px;max-height:520px;overflow:auto;margin:0}
+.apt{margin:0;padding-left:18px;font-size:13.5px;line-height:1.5}
+@media print{.slide.fantasma{display:none!important}}
 /* ---------- impressão / PDF ---------- */
 @media print{
   @page{size:A4 landscape;margin:0}
@@ -234,7 +239,7 @@ body.apresentando main{padding-bottom:60px}
     <p class="hint">Vai junto com os números para o agente Interagir explicar as variações.</p>
     <h5 class="so-pronto">Sumário</h5><nav id="indice"></nav>
     <p class="hint">Os arquivos são lidos só neste navegador. Nada é enviado para a internet.</p>
-    <p class="hint" style="opacity:.7">Versão 23/11/2026 19:54</p>
+    <p class="hint" style="opacity:.7">Versão 23/11/2026 19:58</p>
   </aside>
   <main>
     <div id="drop">
@@ -2254,6 +2259,20 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
     return slide('foco', 'Fechamento', 'Pontos de atenção e próximos passos', `<div class="duo"><div class="iabox"><h4>Foco da diretoria</h4>${ul(foco.length ? foco : auto, 'Gere a análise do agente para preencher.')}</div><div class="iabox"><h4>Pendências de informação</h4>${ul(pend.length ? pend : faltam, 'Nenhuma pendência.')}</div></div>`,
       { sub: foco.length ? 'Leitura do agente Interagir, revisada pela consultoria' : 'Pontos automáticos a partir dos números · gere a análise do agente para completar' });
   }
+  // SLIDE FANTASMA: o que vai para o agente + os apontamentos dele para a consultora (não entra na apresentação nem no PDF)
+  function sFantasma() {
+    if (ST.imprimir) return '';
+    const ap = (ST.copilot.APONTAMENTOS || '').split('\n').map(l => l.replace(/^[-•*]\s*/, '').trim()).filter(Boolean);
+    const txt = PROMPT + pacote();
+    return `<section class="slide fantasma" id="fantasma" data-secao="Bastidores" data-titulo="Slide fantasma · dados e apontamentos do Interagir">
+      <div class="fx">👻 Slide fantasma · só para a consultora · não aparece no ▶ Apresentar nem no PDF</div>
+      <header class="nh"><div><h2>Bastidores da RAR</h2><p class="nsub">O que vai para o agente Interagir e o que ele aponta antes da reunião</p></div></header>
+      <div class="sb"><div class="duo">
+        <div><h4 class="h4">Apontamentos do Interagir</h4>${ap.length ? `<ul class="apt">${ap.map(l => `<li>${esc(l)}</li>`).join('')}</ul>` : '<p class="ph">Clique em ✦ Gerar leitura. Além da leitura de cada slide, o Interagir devolve aqui as críticas: números que merecem checagem, inconsistências entre as fontes, perguntas que a diretoria provavelmente vai fazer e o que falta para a análise ficar completa.</p>'}
+          <h4 class="h4" style="margin-top:16px">Pendências que a página encontrou</h4><ul class="apt">${pendencias().map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>
+        <div><h4 class="h4">Dados enviados ao agente <small class="hint">${txt.length.toLocaleString('pt-BR')} caracteres</small></h4><pre class="pk">${esc(txt)}</pre></div>
+      </div></div></section>`;
+  }
   function sFim() {
     return slide('fim', 'Fechamento', 'Encerramento', `<div class="capa2"><div class="cfoto" style="${ST.logos.capa ? `background-image:url('${ST.logos.capa}')` : ''}"></div><div class="clogos"><h1>Obrigado</h1><p class="hint">KND · Aceleradora de resultados</p></div></div>`, { capa: true });
   }
@@ -2261,7 +2280,7 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
   function render() {
     pagina = 0;
     let h = sCapa() + sOPR() + sResumo() + sFatAnos() + sFatOrc() + sFatMensal() + sFatHist() + sVendasRep() + sProdutos() + sClientes() + sBonif()
-      + sRecebimento() + sPrazo() + sSaldos() + sDFC() + sCompras() + sEstoque() + sPremissas() + sDRE() + sMedias() + sInad() + sTitulos() + sInadCli() + sFoco() + sFim();
+      + sRecebimento() + sPrazo() + sSaldos() + sDFC() + sCompras() + sEstoque() + sPremissas() + sDRE() + sMedias() + sInad() + sTitulos() + sInadCli() + sFoco() + sFim() + sFantasma();
     $('#deck').innerHTML = h;
     const secs = {}; document.querySelectorAll('.slide').forEach(s => (secs[s.dataset.secao] = secs[s.dataset.secao] || []).push(s));
     $('#indice').innerHTML = Object.entries(secs).map(([sec, arr]) => `<div class="isec">${esc(sec)}</div>${arr.map(s => `<a href="#${s.id}">${esc(s.dataset.titulo)}</a>`).join('')}`).join('');
@@ -2317,7 +2336,7 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
     if (e.inad) { const T = e.inad.titulos.filter(t => t.dias > 0), t = T.reduce((a, x) => a + x.val, 0), f = fat12(); L.push(`\n[INADIMPLÊNCIA ${fmtD(e.inad.base)}] vencido ${n(t)} | ${T.length} títulos, ${new Set(T.map(x => x.cliente)).size} clientes | índice ${f ? fmtPc(t / f) : '-'} | acima de 90 dias ${fmtPc(T.filter(x => x.dias > 90).reduce((a, x) => a + x.val, 0) / t)} | antes de ${y}: ${n(T.filter(x => x.venc.getUTCFullYear() < y).reduce((a, x) => a + x.val, 0))}`); }
     return L.join('\n');
   }
-  const MARCAS = ['RESUMO', 'OPR', 'FATURAMENTO', 'PRODUTOS_CLIENTES', 'BONIFICACAO', 'RECEBIMENTO', 'CAIXA', 'COMPRAS_ESTOQUE', 'RESULTADO', 'INADIMPLENCIA', 'FOCO', 'PENDENCIAS'];
+  const MARCAS = ['RESUMO', 'OPR', 'FATURAMENTO', 'PRODUTOS_CLIENTES', 'BONIFICACAO', 'RECEBIMENTO', 'CAIXA', 'COMPRAS_ESTOQUE', 'RESULTADO', 'INADIMPLENCIA', 'FOCO', 'PENDENCIAS', 'APONTAMENTOS'];
   const PROMPT = `Você é o Interagir, analista financeiro sênior da KND. Escreva a leitura da RAR no modelo narrativo, com os marcadores ${MARCAS.map(m => '[' + m + ']').join(' ')}, usando somente os DADOS abaixo e o contexto da consultoria. Não recalcule números.
 
 DADOS:
@@ -2357,7 +2376,7 @@ DADOS:
   function fecharEMostrar(n) {
     $('#copilot').classList.remove('on');
     const alvo = document.getElementById('resumo'); if (alvo) { if (document.body.classList.contains('apresentando')) irPara(slides().indexOf(alvo)); else alvo.scrollIntoView({ behavior: 'smooth' }); }
-    const t = $('#toast'); t.textContent = `✓ Leitura do Interagir aplicada (${n} blocos) nos slides`; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 3500);
+    const t = $('#toast'); t.textContent = `✓ Leitura do Interagir aplicada (${n} blocos)${ST.copilot.APONTAMENTOS ? ' · veja os apontamentos no slide fantasma, no fim' : ''}`; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 3500);
   }
 
   // ------------------------------------------------------------------ carregar
@@ -2392,7 +2411,7 @@ DADOS:
   }
   // ------------------------------------------------------------------ apresentação e PDF
   let atual = 0;
-  const slides = () => [...document.querySelectorAll('#deck .slide')];
+  const slides = () => [...document.querySelectorAll('#deck .slide:not(.fantasma)')];
   function ajustarEscala() { const sc = Math.min((innerWidth - 40) / 1120, (innerHeight - 30) / 630); document.documentElement.style.setProperty('--esc', Math.max(0.5, sc).toFixed(3)); }
   function irPara(i) {
     const ss = slides(); if (!ss.length) return;
@@ -2455,7 +2474,7 @@ DADOS:
         try { rec.start(); btn.classList.add('on'); btn.textContent = '■ Parar de gravar'; $('#mic-dica').textContent = ''; } catch (err) { rec = null; ditadoSistema(''); }
       };
     })();
-    $('#ctx-side').addEventListener('input', e => { ST.contexto = e.target.value; $('#ctx-n').textContent = `${e.target.value.length}/1500`; if (ST.M) atualizarPacote(); });
+    $('#ctx-side').addEventListener('input', e => { ST.contexto = e.target.value; $('#ctx-n').textContent = `${e.target.value.length}/1500`; if (ST.M) { atualizarPacote(); const f = document.getElementById('fantasma'); if (f) rerenderKeep(); } });
     $('#cfg-cliente').addEventListener('change', e => { ST.nomeCliente = e.target.value.trim(); if (ST.M) { ST.M.cliente = ST.nomeCliente; rerenderKeep(); } });
     document.querySelectorAll('.in-logo').forEach(inp2 => inp2.addEventListener('change', async () => { const fs = [...inp2.files]; if (!fs.length) return; const lista = []; for (const f of fs) lista.push({ nome: f.name.replace(/\.[^.]+$/, ''), src: await lerImagem(f) }); ST.logos.cliente = lista; $('#logo-prev').innerHTML = lista.map(l => `<img src="${l.src}" alt="">`).join(''); if (ST.M) rerenderKeep(); }));
     $('#logo-limpar').onclick = () => { ST.logos.cliente = []; $('#logo-prev').innerHTML = ''; if (ST.M) rerenderKeep(); };
