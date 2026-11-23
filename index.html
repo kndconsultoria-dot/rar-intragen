@@ -202,6 +202,19 @@ body.apresentando main{padding-bottom:60px}
 .pk{white-space:pre-wrap;font:11px/1.4 ui-monospace,Consolas,monospace;background:#f2f5f8;border:1px solid var(--linha);border-radius:6px;padding:10px;max-height:520px;overflow:auto;margin:0}
 .apt{margin:0;padding-left:18px;font-size:13.5px;line-height:1.5}
 @media print{.slide.fantasma{display:none!important}}
+.oprx{font-family:Aptos,"Segoe UI",system-ui,sans-serif}
+.opr-cab{border-collapse:collapse;font-size:12.5px;margin-bottom:8px;min-width:560px}.opr-cab td{padding:2px 10px;font-weight:700}
+.opr-cab td:first-child{background:#0C3F76;color:#fff;width:200px}.opr-cab td:last-child{background:#D9D9D9;color:#111}
+.opr-x{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+.opr-x th{background:#0C3F76;color:#fff;font-weight:700;padding:9px 6px;text-align:center;border:1px solid #0C3F76;font-size:11.5px}
+.opr-x td{border:1px solid #0C3F76;padding:6px 7px;text-align:center;vertical-align:middle}
+.opr-x td.oi{text-align:left;font-family:"Segoe UI Emoji","Segoe UI",sans-serif;font-size:12.5px;min-width:230px}
+.opr-x td.cm{text-align:left;font-size:11.5px;min-width:250px;max-width:320px}.opr-x td.cm small{display:block;color:#7a6a30;font-size:10.5px;margin-top:2px}.opr-x td.cm small.falta{color:#B5473A}
+.opr-x td.st{background:#FFFF00;font-weight:700;font-size:10.5px}.opr-x td.st.p{color:#B5473A}
+.opr-x td.opm.vazio{background:repeating-linear-gradient(45deg,#fff,#fff 6px,#fff4f2 6px,#fff4f2 12px);cursor:text;min-width:70px}.opr-x td.opm.vazio:empty:before{content:"digitar";color:#c99;font-size:10.5px}
+.opr-x td.warn{color:#B5473A;font-weight:600}.opr-x td[contenteditable]:focus{outline:2px solid #6CC7EF;background:#fff}
+.opr-x sup{color:#0C3F76;margin-left:1px}.oprn{margin-top:8px}
+@media print{.oprn{display:none}.opr-x td.opm.vazio{background:none}.opr-x td.opm.vazio:before{content:"—"}}
 /* ---------- impressão / PDF ---------- */
 @media print{
   @page{size:A4 landscape;margin:0}
@@ -219,9 +232,10 @@ body.apresentando main{padding-bottom:60px}
   <div class="marca"><img id="top-logo" alt="KND" style="height:30px;display:block"></div>
   <div class="nome">RAR · <b>modelo narrativo</b> (slide a slide)</div>
   <label class="bt pri">Carregar arquivos<input id="arquivos" type="file" accept=".xlsx,.xlsm,.xls,.png,.jpg,.jpeg,.svg,.webp" multiple hidden></label>
-  <button class="bt ia so-pronto" id="btn-copilot">✦ Gerar leitura (agente Interagir)</button>
+  <button class="bt ia so-pronto" id="btn-copilot">✦ Gerar leitura (agente Intragen)</button>
   <button class="bt pri so-pronto" id="btn-apresentar">▶ Apresentar</button>
   <button class="bt so-pronto" id="btn-pdf">Baixar PDF (todas as abas)</button>
+  <button class="bt so-pronto" id="btn-opr">Baixar OPR (.xlsx)</button>
 </div>
 <div class="wrap">
   <aside>
@@ -230,16 +244,16 @@ body.apresentando main{padding-bottom:60px}
     <div class="cfg"><label>Nome<input id="cfg-cliente" type="text" placeholder="Nome do cliente" style="width:150px;text-align:left"></label>
     <label>Logomarca<span><label class="bt mini">Escolher<input class="in-logo" type="file" accept=".png,.jpg,.jpeg,.svg,.webp" multiple hidden></label> <button class="bt mini" id="logo-limpar">Tirar</button></span></label>
     <div id="logo-prev" class="logo-prev"></div></div>
-    <h5>Agente Interagir</h5>
-    <p class="hint" style="margin:0">O botão <b>✦ Gerar leitura</b> copia os dados e abre o Interagir. <a id="link-agente" href="#" target="_blank" rel="noopener">Abrir o Interagir ↗</a></p>
+    <h5>Agente Intragen</h5>
+    <p class="hint" style="margin:0">O botão <b>✦ Gerar leitura</b> copia os dados e abre o agente Intragen. <a id="link-agente" href="#" target="_blank" rel="noopener">Abrir o agente Intragen ↗</a></p>
     <h5>Contexto do mês <small id="ctx-n" style="float:right;font-weight:400">0/1500</small></h5>
     <button class="bt mini mic" id="btn-mic" type="button" title="Falar o contexto (o texto é transcrito no campo abaixo)">🎤 Falar o contexto</button>
     <p id="mic-dica" class="hint" style="margin:0 0 6px"></p>
     <textarea id="ctx-side" maxlength="1500" class="ctx-side" placeholder="O que aconteceu no cliente neste mês? Ex.: puxada de produção por problemas com o MAPA; estamos adiantando estoque, o que eleva matéria-prima e embalagens."></textarea>
-    <p class="hint">Vai junto com os números para o agente Interagir explicar as variações.</p>
+    <p class="hint">Vai junto com os números para o agente Intragen explicar as variações.</p>
     <h5 class="so-pronto">Sumário</h5><nav id="indice"></nav>
     <p class="hint">Os arquivos são lidos só neste navegador. Nada é enviado para a internet.</p>
-    <p class="hint" style="opacity:.7">Versão 23/11/2026 20:04</p>
+    <p class="hint" style="opacity:.7">Versão 23/11/2026 20:44</p>
   </aside>
   <main>
     <div id="drop">
@@ -259,9 +273,9 @@ body.apresentando main{padding-bottom:60px}
   </main>
 </div>
 <div id="copilot">
-  <div style="display:flex;justify-content:space-between;align-items:center"><h3>Leitura do agente Interagir</h3><button class="bt" id="cp-fechar">Fechar</button></div>
+  <div style="display:flex;justify-content:space-between;align-items:center"><h3>Leitura do agente Intragen</h3><button class="bt" id="cp-fechar">Fechar</button></div>
   <div style="display:flex;gap:8px"><button class="bt pri" id="cp-copiar">1. Copiar dados</button><button class="bt ia" id="cp-abrir">2. Abrir agente</button></div>
-  <p id="cp-aviso" class="cp-aviso">Clique em <b>✦ Gerar leitura</b>: os números, o contexto e as pendências são copiados e o agente Interagir abre numa nova aba.</p>
+  <p id="cp-aviso" class="cp-aviso">Clique em <b>✦ Gerar leitura</b>: os números, o contexto e as pendências são copiados e o agente Intragen abre numa nova aba.</p>
   <textarea id="cp-resposta" placeholder="Cole aqui a resposta do agente…"></textarea>
   <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span id="cp-msg"></span><button class="bt pri" id="cp-aplicar">Aplicar ao relatório</button></div>
   <details class="cp-det"><summary>Ver o que foi enviado ao agente <span id="cp-count"></span></summary>
@@ -352,6 +366,16 @@ const KND = (() => {
     const data = z.buf.subarray(start, start + f.csize);
     const out = f.method === 0 ? data : await inflateRaw(data);
     return new TextDecoder().decode(out);
+  }
+  // todos os arquivos do .xlsx (para gravar de volta um modelo, preservando a formatação)
+  async function zipTodos(buf) {
+    const z = zipIndex(buf), out = [];
+    for (const name of Object.keys(z.files)) {
+      const f = z.files[name], nlen = z.dv.getUint16(f.lho + 26, true), xlen = z.dv.getUint16(f.lho + 28, true), st = f.lho + 30 + nlen + xlen;
+      const data = z.buf.subarray(st, st + f.csize);
+      out.push({ name, bytes: f.method === 0 ? data.slice() : await inflateRaw(data) });
+    }
+    return out;
   }
   const ENT = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
   const unesc = s => s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, g) =>
@@ -1418,7 +1442,7 @@ const KND = (() => {
     MESES, MES3, norm, sumTo, zeros, add, isZero, similar, fatCat, N1NOME,
     openWorkbook, classify, carregar, montarTudo, readDFC, readCompetencia, buildTree, leaves, headersOf,
     isTreasy, treasyRows, treasyTree, linhasDeArvore,
-    fmtR, fmtN, fmtC, fmtP, pct, nf1, nf2, monthIdx, isNum, n1Of,
+    fmtR, fmtN, fmtC, fmtP, pct, nf1, nf2, monthIdx, isNum, n1Of, zipTodos,
   };
 })();
 if (typeof module !== 'undefined') module.exports = KND;
@@ -1821,7 +1845,7 @@ const NarrDados = (() => {
 if (typeof module !== 'undefined') module.exports = NarrDados;
 </script>
 <script>/* =====================================================================
-   KND · Modelo NARRATIVO (RAR slide a slide) – slides, agente Interagir, PDF
+   KND · Modelo NARRATIVO (RAR slide a slide) – slides, agente Intragen, PDF
    Mesmo motor do modelo padrão (core.js + charts.js); muda a estrutura da apresentação.
    ===================================================================== */
 (() => {
@@ -1830,12 +1854,12 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
   const esc = Charts.esc;
   const $ = s => document.querySelector(s);
   const AGENTE_PADRAO = 'https://m365.cloud.microsoft/chat';
-  // agente Interagir (Copilot) – já vem configurado; o campo da lateral só serve para trocar
-  const AGENTE_INTERAGIR = 'https://copilot.cloud.microsoft/chat/agent/T_85fd9225-041e-cf52-86ac-abfa91ada953.d185e6a9-e6fa-4c02-b2f1-6f4e1e8e288f.gpt.a4f92c33-0be7-48d3-927a-be57a1772cfa';
+  // agente Intragen (Copilot) – já vem configurado; o campo da lateral só serve para trocar
+  const AGENTE_INTRAGEN = 'https://copilot.cloud.microsoft/chat/agent/T_85fd9225-041e-cf52-86ac-abfa91ada953.d185e6a9-e6fa-4c02-b2f1-6f4e1e8e288f.gpt.a4f92c33-0be7-48d3-927a-be57a1772cfa';
   const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { } };
   const ST = {
-    M: null, E: {}, copilot: {}, edit: {}, abas: {}, contexto: '', imprimir: false,
+    M: null, E: {}, M0: null, E0: null, oprMan: {}, oprTpl: null, arqAnt: '', copilot: {}, edit: {}, abas: {}, contexto: '', imprimir: false,
     logos: { knd: (window.KND_ASSETS || {}).kndEscuro || '', kndBranco: (window.KND_ASSETS || {}).kndBranco || '', capa: (window.KND_ASSETS || {}).capa || '', cliente: [] },
   };
   const C = { navy: '#14283B', azul: '#0E6EAF', claro: '#6CC7EF', cinza: '#C5CFD8', pos: '#0A8A8F', neg: '#B5473A', ambar: '#D9A520' };
@@ -1939,23 +1963,173 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
       <div class="clogos">${cli ? `<img src="${cli.src}" alt="">` : `<h1>${esc(M().cliente || 'Cliente')}</h1>`}<p class="hint" style="text-align:center">Dados preenchidos até ${mesTxt()}</p></div></div>`, { capa: true });
   }
   const fmtInd = (l, v) => { if (v == null) return '–'; const n = norm(l.nome); if (/margem/.test(n) || (Math.abs(v) < 1.5 && /mg |indice/.test(n))) return fmtPc(v); if (/headcount/.test(n)) return fmtQ(v); return fmtC(v); };
+  // ------------------------------------------------------------------ OPR AUTOMÁTICO (YTD até o último mês do DFC)
+  // 2026 = DFC do ano; 2025 = DFC do ano anterior; orçamento = DRE do ano. O que não estiver nos DFCs fica para digitar.
+  const OPR_DEF = [
+    { k: 'caixa', nome: '💰 Caixa Disponível', re: /caixa disponivel/, f: 'R' },
+    { k: 'receita', nome: '📈 Receita Total Gerencial', re: /receita total/, f: 'R' },
+    { k: 'gcx', nome: '🧮 Geração de Caixa Operacional', re: /geracao de caixa/, f: 'R' },
+    { k: 'estoque', nome: '🎯 Estoque', re: /^.{0,4}estoque/, f: 'R', mm: true },
+    { k: 'endiv', nome: '📉 Endividamento', re: /endividamento/, f: 'R', mm: true, manual: true },
+    { k: 'inad', nome: '🫰 Receita: total inadimplência', re: /inadimplencia/, f: 'R', mm: true },
+    { k: 'cr', nome: '🎯 Contas a Receber', re: /contas a receber/, f: 'R', mm: true, manual: true },
+    { k: 'ebitda', nome: '💲 EBITDA Gerencial', re: /^.{0,4}ebitda/, f: 'R' },
+    { k: 'mebitda', nome: '💲 Margem EBITDA Gerencial', re: /margem ebitda/, f: 'P' },
+    { k: 'lucro', nome: '💲 Lucro Líquido Gerencial', re: /lucro liquido/, f: 'R' },
+    { k: 'mliq', nome: '💲 Margem Líquida Gerencial', re: /margem liquida/, f: 'P' },
+    { k: 'folha', nome: '📤 Folha de pagamento do mês (nominal)', re: /folha de pagamento/, f: 'R', mm: true, manual: true },
+    { k: 'hc', nome: '📤 Headcount de funcionários', re: /headcount/, f: 'N', manual: true },
+    { k: 'capex', nome: '🏗️ Capex (Imobilizado)', re: /capex/, f: 'R', manual: true },
+  ];
+  const oprPeriodo = () => `Jan–${MES3[ref()]} ${ano()}`;
+  const mesmoPeriodo = p => norm(p || '').replace(/[^a-z0-9]/g, '') === norm(oprPeriodo()).replace(/[^a-z0-9]/g, '');
+  function oprAuto() {
+    const m = M(), e = E(), r = ref(), m0 = ST.M0, e0 = ST.E0 || {}, sy = (v, k = r) => v ? sumTo(v, k) : null;
+    const o = m.orc, o0 = m0 && m0.orc, cx0 = m0 && m0.caixa;
+    const L = {};
+    const put = (k, atual, ant, orc, extra = {}) => { L[k] = { atual, ant, orc, ...extra }; };
+    put('caixa', m.bancos ? m.bancos.total.fim[r] : null, m0 && m0.bancos ? m0.bancos.total.fim[r] : null, m.bancos && o && o.n1.RET ? m.bancos.total.ini[0] + sy(o.n1.RET.orc) : null, { notaOrc: 'saldo de 31/12 + lucro orçado' });
+    put('receita', e.fat ? sy(e.fat.real) : null, e0.fat ? sy(e0.fat.real) : (e.fat && e.fat.hist[ano() - 1] ? sy(e.fat.hist[ano() - 1]) : null), e.fat ? sy(e.fat.orc) : null);
+    put('gcx', m.caixa ? sy(m.caixa.n1.ROA.y[ano()]) : null, cx0 ? sy(cx0.n1.ROA.y[ano() - 1]) : null, o && o.n1.ROA ? sy(o.n1.ROA.orc) : null, { notaOrc: 'orçado pela DRE' });
+    const est = e.estoque ? e.estoque.total[r] : null, est0 = e0.estoque ? e0.estoque.total[r] : null;
+    put('estoque', est, est0, est0 != null ? est0 * 1.2 : null, { notaOrc: 'ano anterior × 1,2' });
+    const inad = e.inad ? e.inad.titulos.filter(t => t.dias > 0).reduce((a, t) => a + t.val, 0) : null;
+    put('inad', inad, null, null, { notaAtual: e.inad ? `posição de ${fmtD(e.inad.base)}` : '' });
+    const eb = o && o.n1.ROA ? sy(o.n1.ROA.real) : null, eb0 = o0 && o0.n1.ROA ? sy(o0.n1.ROA.real) : null, ebO = o && o.n1.ROA ? sy(o.n1.ROA.orc) : null;
+    const rec = o ? sy(o.n1.ENT.real) : null, rec0 = o0 ? sy(o0.n1.ENT.real) : null, recO = o ? sy(o.n1.ENT.orc) : null;
+    const lu = o && o.n1.RET ? sy(o.n1.RET.real) : null, lu0 = o0 && o0.n1.RET ? sy(o0.n1.RET.real) : null, luO = o && o.n1.RET ? sy(o.n1.RET.orc) : null;
+    const div = (a, b) => a == null || !b ? null : a / b;
+    put('ebitda', eb, eb0, ebO); put('mebitda', div(eb, rec), div(eb0, rec0), div(ebO, recO));
+    put('lucro', lu, lu0, luO); put('mliq', div(lu, rec), div(lu0, rec0), div(luO, recO));
+    ['endiv', 'cr', 'folha', 'hc', 'capex'].forEach(k => put(k, null, null, null));
+    // planilha do OPR do mesmo período: aproveita o que a consultoria já digitou nos campos manuais
+    const tpl = e.opr && mesmoPeriodo(e.opr.periodo) ? e.opr : null;
+    if (tpl) tpl.linhas.forEach(l => { const d = OPR_DEF.find(x => x.re.test(norm(l.nome))); if (!d) return; const x = L[d.k]; ['atual', 'ant', 'orc'].forEach(c => { if (x[c] == null && l[c] != null) { x[c] = l[c]; x.daPlanilha = true; } }); });
+    // o que foi digitado na página vale sobre tudo
+    Object.entries(ST.oprMan || {}).forEach(([k, v]) => Object.entries(v).forEach(([c, val]) => { if (L[k]) L[k][c] = val; }));
+    // orçamento padrão = ano anterior × 1,2 para os manuais com ano anterior
+    ['inad', 'cr', 'folha', 'hc'].forEach(k => { const x = L[k]; if (x.orc == null && x.ant != null && !(ST.oprMan[k] && 'orc' in ST.oprMan[k])) { x.orc = x.ant * 1.2; x.notaOrc = 'ano anterior × 1,2'; } });
+    const cmv = cmvIncompleto();
+    return OPR_DEF.map(d => {
+      const x = L[d.k], falta = ['atual', 'ant', 'orc'].filter(c => x[c] == null);
+      const v = (a, b) => a == null || b == null || Math.abs(b) < 1e-9 ? null : (a - b) / Math.abs(b);
+      const cmvAviso = cmv.length && ['ebitda', 'mebitda', 'lucro', 'mliq'].includes(d.k) ? `DRE sem CMV em ${cmv.map(c => c.m.toLowerCase()).join('/')}: valor superestimado` : '';
+      return { ...d, ...x, v1: v(x.atual, x.ant), v2: v(x.atual, x.orc), falta, cmvAviso, status: falta.includes('atual') ? 'PENDENTE' : falta.length ? 'PARCIAL' : cmvAviso ? 'ATENÇÃO' : 'OK' };
+    });
+  }
+  const fmtOpr = (d, v) => v == null ? '' : d.f === 'P' ? KND.nf2.format(v * 100) + '%' : d.f === 'N' ? fmtQ(v) : new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(v);
+  const nomeFalta = { atual: String(new Date().getFullYear()), ant: 'ano anterior', orc: 'orçamento' };
   function sOPR() {
-    const o = E().opr;
-    if (!o) return slide('opr', 'Abertura', `OPR — ${MESES[ref()]}/${ano()}`, pendente('O OPR é a tabela de indicadores com o comentário estratégico da consultoria (caixa disponível, receita, geração de caixa, estoque, inadimplência, EBITDA…).', 'a planilha do OPR do mês'));
-    const menorMelhor = l => /inadimpl|endivid|estoque|folha|capex|contas a receber/.test(norm(l.nome));
-    const iaOpr = {}; (ST.copilot.OPR || '').split('\n').forEach(l => { const m = /^[-•*]?\s*([^:]{3,60}):\s*(.+)$/.exec(l.trim()); if (m) iaOpr[norm(m[1]).replace(/[^a-z ]/g, '').trim()] = m[2].trim(); });
-    const comIA = l => { const k = norm(l.nome).replace(/[^a-z ]/g, '').trim(); const hit = Object.keys(iaOpr).find(x => k.includes(x) || x.includes(k)); return hit ? iaOpr[hit] : ''; };
-    const rows = o.linhas.map(l => {
-      const ia = comIA(l), coment = ia || l.coment;
-      const pend = /pendent/i.test(l.status) || (l.atual == null && l.ant == null);
-      return `<tr class="${pend ? 'tpend' : ''}"><td>${esc(l.nome)}</td><td>${fmtInd(l, l.atual)}</td><td>${fmtInd(l, l.ant)}</td><td>${fmtInd(l, l.orc)}</td>
-        <td class="${cls(l.var1, menorMelhor(l))}">${l.var1 == null ? '–' : fmtP(l.var1)}</td><td class="${cls(l.var2, menorMelhor(l))}">${l.var2 == null ? '–' : fmtP(l.var2)}</td>
-        <td class="cm">${esc(coment || '')}${ia ? ' <i class="tia">agente</i>' : ''}</td><td><span class="stt ${pend ? 'p' : 'ok'}">${esc(l.status || (pend ? 'Pendente' : 'OK'))}</span></td></tr>`;
+    if (!M().caixa) return '';
+    const linhas = oprAuto(), y = ano();
+    const iaOpr = {}; (ST.copilot.OPR || '').split('\n').forEach(l => { const mm = /^[-•*]?\s*([^:]{3,70}):\s*(.+)$/.exec(l.trim()); if (mm) iaOpr[norm(mm[1]).replace(/[^a-z ]/g, '').trim()] = mm[2].trim(); });
+    const comIA = d => { const k = norm(d.nome).replace(/[^a-z ]/g, '').trim(); const hit = Object.keys(iaOpr).find(x => x && (k.includes(x) || x.includes(k))); return hit ? iaOpr[hit] : ''; };
+    const cel = (d, c) => {
+      const val = d[c];
+      if (val == null && !ST.imprimir) return `<td class="opm vazio" contenteditable="true" data-opm="${d.k}|${c}" title="Digite o valor"></td>`;
+      if (val == null) return '<td class="opm">—</td>';
+      const nota = c === 'orc' && d.notaOrc ? ` title="${esc(d.notaOrc)}"` : '';
+      return `<td${nota} class="${c === 'atual' && d.cmvAviso ? 'warn' : ''}" ${!ST.imprimir ? `contenteditable="true" data-opm="${d.k}|${c}"` : ''}>${fmtOpr(d, val)}${c === 'orc' && d.notaOrc ? '<sup>*</sup>' : ''}</td>`;
+    };
+    const pc = v => v == null ? '' : `<span class="${v >= 0 ? '' : ''}">${KND.nf1.format(v * 100)}%</span>`;
+    const rows = linhas.map(d => {
+      const auto = [d.falta.length ? `Falta: ${d.falta.map(c => c === 'atual' ? y : c === 'ant' ? y - 1 : 'orçamento').join(', ')}${d.manual ? ' (fora do DFC)' : ''}` : '', d.cmvAviso, d.notaAtual].filter(Boolean).join(' · ');
+      const coment = comIA(d);
+      return `<tr><td class="oi">${esc(d.nome)}</td>${cel(d, 'atual')}${cel(d, 'ant')}${cel(d, 'orc')}<td>${pc(d.v1)}</td><td>${pc(d.v2)}</td>
+        <td class="cm">${coment ? esc(coment) : ''}${auto ? `<small class="${d.status === 'OK' ? '' : 'falta'}">${esc(auto)}</small>` : ''}</td><td class="st ${d.status === 'OK' ? 'ok' : 'p'}">${d.status}</td></tr>`;
     }).join('');
-    const per = o.periodo || '';
-    const aviso = per && !new RegExp(MES3[ref()], 'i').test(per) ? `<p class="pend-opr">⚠ O OPR enviado é de <b>${esc(per)}</b>; o restante da apresentação vai até ${mesTxt()}. Atualize a planilha do OPR para o mês da reunião.</p>` : '';
-    return slide('opr', 'Abertura', `OPR — ${MESES[ref()]}/${ano()}`, `${aviso}<table class="tb opr-t"><thead><tr><th class="l">Indicador</th><th>${o.anoAtual || ano()}</th><th>${o.anoAnt || ano() - 1}</th><th>Orçamento</th><th>Var. vs ${o.anoAnt || ano() - 1}</th><th>Var. vs orç.</th><th>Comentário estratégico</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`,
-      { sub: `${esc(per || periodo())} · YTD ${o.anoAtual || ano()} × YTD ${o.anoAnt || ano() - 1} × orçamento`, fonte: esc(E().fontes.opr || '') });
+    const pend = linhas.filter(d => d.status !== 'OK').length;
+    return slide('opr', 'Abertura', `OPR — ${MESES[ref()]}/${y}`, `<div class="oprx">
+      <table class="opr-cab"><tr><td>Empresa:</td><td>${esc(M().cliente || '')}</td></tr><tr><td>Período:</td><td>${oprPeriodo()}</td></tr><tr><td>Comparativo:</td><td>YTD ${y} vs. YTD ${y - 1} vs. Orçamento ${y}</td></tr></table>
+      <table class="opr-x"><thead><tr><th></th><th>${y}</th><th>${y - 1}</th><th>Orçamento ${y}</th><th>Var vs. ${y - 1}</th><th>Var vs. Orç</th><th>Comentário Estratégico</th><th>Status de atualização</th></tr></thead><tbody>${rows}</tbody></table>
+      <p class="hint oprn">${ST.M0 ? '' : `⚠ Solte também o DFC de ${y - 1} para preencher a coluna ${y - 1}. `}${pend ? `${pend} indicador(es) com informação faltando: clique na célula vazia para digitar.` : 'Todos os indicadores preenchidos.'} * orçamento por regra (passe o mouse para ver).</p></div>`,
+      { fonte: `YTD jan–${MES3[ref()].toLowerCase()}: ${esc(ST.fonte.caixa.arquivo)}${ST.arqAnt ? ' e ' + esc(ST.arqAnt) : ''}${E().inad ? ' · inadimplência: ' + esc(E().fontes.inad) : ''}`, tag: oprPeriodo() });
+  }
+  // número digitado: "1.591.437,54", "1591437.54", "14,5%" ou "20"
+  function lerNumero(t, pctg) {
+    t = String(t || '').trim(); if (!t || t === '—') return null;
+    const p = /%/.test(t); t = t.replace(/[R$\s%]/g, '');
+    if (/,\d{1,2}$/.test(t) || (/\./.test(t) && /,/.test(t))) t = t.replace(/\./g, '').replace(',', '.'); else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+    const v = parseFloat(t); if (!isFinite(v)) return null;
+    return p || (pctg && Math.abs(v) > 1.5) ? v / 100 : v;
+  }
+  // ---------------------------------------------------------------- OPR em Excel: grava no próprio modelo da consultoria (formatação intacta)
+  async function baixarOPR() {
+    if (!ST.M) return alert('Carregue os arquivos primeiro.');
+    if (!ST.oprTpl) return alert('Para baixar o OPR em Excel, solte junto a planilha do OPR de qualquer mês: ela serve de modelo (a formatação fica igual).');
+    const linhas = oprAuto(), y = ano();
+    const ents = await KND.zipTodos(new Uint8Array(await ST.oprTpl.arrayBuffer()));
+    const dec = new TextDecoder(), enc = new TextEncoder(), get = n => { const x = ents.find(z => z.name === n); return x ? dec.decode(x.bytes) : ''; };
+    const put = (n, t) => { const x = ents.find(z => z.name === n); if (x) x.bytes = enc.encode(t); };
+    const shared = []; get('xl/sharedStrings.xml').replace(/<si>([\s\S]*?)<\/si>/g, (mm, inner) => { shared.push((inner.match(/<t[^>]*>([\s\S]*?)<\/t>/g) || []).map(x => x.replace(/<[^>]+>/g, '')).join('')); return ''; });
+    const unx = t => t.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+    const xe = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const textoCel = c => { const t = /\bt="([^"]+)"/.exec(c), v = /<v>([\s\S]*?)<\/v>/.exec(c); if (t && t[1] === 's' && v) return unx(shared[+v[1]] || ''); const is = /<is>([\s\S]*?)<\/is>/.exec(c); if (is) return unx(is[1].replace(/<[^>]+>/g, '')); return v ? unx(v[1]) : ''; };
+    const folha = ents.filter(z => /^xl\/worksheets\/sheet\d+\.xml$/.test(z.name)).find(z => /coment/i.test(norm(dec.decode(z.bytes).replace(/<c [^>]*t="s"[^>]*><v>(\d+)<\/v><\/c>/g, (mm, i) => ' ' + shared[+i] + ' '))));
+    if (!folha) return alert('Não encontrei, na planilha do OPR, a aba com a coluna "Comentário".');
+    let xml = dec.decode(folha.bytes);
+    const colN = c => c.split('').reduce((a, ch) => a * 26 + ch.charCodeAt(0) - 64, 0);
+    const setCel = (rowXml, ref2, novo) => { // novo: {num} | {txt} | {vazio}
+      const re = new RegExp(`<c r="${ref2}"(?=[ />])([^>]*?)(?:/>|>([\\s\\S]*?)</c>)`);
+      const mm = re.exec(rowXml), s2 = mm ? (/\bs="(\d+)"/.exec(mm[1]) || [])[1] : null, sa = s2 ? ` s="${s2}"` : '';
+      const cel = novo.f != null ? `<c r="${ref2}"${sa}><f>${xe(novo.f)}</f></c>` : novo.num != null ? `<c r="${ref2}"${sa}><v>${novo.num}</v></c>` : novo.txt != null ? `<c r="${ref2}"${sa} t="inlineStr"><is><t xml:space="preserve">${xe(novo.txt)}</t></is></c>` : `<c r="${ref2}"${sa}/>`;
+      if (mm) return rowXml.replace(mm[0], cel);
+      // célula ainda não existe na linha: entra na posição da coluna
+      const cn = colN(ref2.replace(/\d+/g, '')); let pos = rowXml.lastIndexOf('</row>');
+      const reC = /<c r="([A-Z]+)\d+"/g; let k;
+      while ((k = reC.exec(rowXml))) if (colN(k[1]) > cn) { pos = k.index; break; }
+      return rowXml.slice(0, pos) + cel + rowXml.slice(pos);
+    };
+    const tiraCache = (rowXml, col, r) => rowXml.replace(new RegExp(`(<c r="${col}${r}"[^>]*?)( t="(?:e|str|n)")?>(<f[\\s\\S]*?</f>)<v>[\\s\\S]*?</v></c>`), '$1>$3</c>');
+    let usados = new Set();
+    xml = xml.replace(/<row\b[^>]*\br="(\d+)"[^>]*>[\s\S]*?<\/row>/g, (rowXml, r) => {
+      const a = /<c r="A\d+"[^>]*?(?:\/>|>[\s\S]*?<\/c>)/.exec(rowXml), b = /<c r="B\d+"[^>]*?(?:\/>|>[\s\S]*?<\/c>)/.exec(rowXml);
+      const ta = a ? norm(textoCel(a[0])) : '', tb = b ? textoCel(b[0]) : '';
+      if (/^empresa/.test(ta)) return setCel(rowXml, `B${r}`, { txt: M().cliente || '' });
+      if (/^periodo/.test(ta)) return setCel(rowXml, `B${r}`, { txt: oprPeriodo() });
+      if (/^comparativo/.test(ta)) return setCel(rowXml, `B${r}`, { txt: `YTD ${y} vs. YTD ${y - 1} vs. Orçamento ${y}` });
+      if (/^20\d{2}$/.test(tb.trim())) { let x2 = setCel(rowXml, `B${r}`, { txt: String(y) }); x2 = setCel(x2, `C${r}`, { txt: String(y - 1) }); return x2.replace(/Orçamento 20\d{2}/, `Orçamento ${y}`).replace(/Var vs\. 20\d{2}/, `Var vs. ${y - 1}`); }
+      const d = linhas.find(l => !usados.has(l.k) && l.re.test(ta)); if (!d) return rowXml;
+      usados.add(d.k);
+      let x2 = rowXml;
+      [['B', 'atual'], ['C', 'ant'], ['D', 'orc']].forEach(([col, c]) => { x2 = setCel(x2, `${col}${r}`, d[c] == null ? {} : { num: Math.round(d[c] * (d.f === 'P' ? 1e4 : 100)) / (d.f === 'P' ? 1e4 : 100) }); });
+      // variações: fórmula única e segura (base negativa ou vazia não inverte o sinal)
+      x2 = setCel(x2, `E${r}`, { f: `IF(OR(B${r}="",C${r}="",C${r}=0),"",(B${r}-C${r})/ABS(C${r}))` });
+      x2 = setCel(x2, `F${r}`, { f: `IF(OR(B${r}="",D${r}="",D${r}=0),"",(B${r}-D${r})/ABS(D${r}))` });
+      const iaTxt = (ST.copilot.OPR || '').split('\n').map(l => /^[-•*]?\s*([^:]{3,70}):\s*(.+)$/.exec(l.trim())).filter(Boolean).find(mm => { const k = norm(d.nome).replace(/[^a-z ]/g, '').trim(), k2 = norm(mm[1]).replace(/[^a-z ]/g, '').trim(); return k2 && (k.includes(k2) || k2.includes(k)); });
+      const aviso = [d.falta.length ? `Falta: ${d.falta.map(c => c === 'atual' ? y : c === 'ant' ? y - 1 : 'orçamento').join(', ')}` : '', d.cmvAviso].filter(Boolean).join(' · ');
+      x2 = setCel(x2, `G${r}`, { txt: [iaTxt ? iaTxt[2] : '', aviso].filter(Boolean).join(' | ') });
+      x2 = setCel(x2, `I${r}`, { txt: d.status });
+      return x2;
+    });
+    put(folha.name, xml);
+    // o Excel recalcula as variações ao abrir
+    let wb = get('xl/workbook.xml');
+    wb = /<calcPr\b/.test(wb) ? wb.replace(/<calcPr\b([^>]*?)\/>/, (mm, at) => `<calcPr${at.replace(/\s*fullCalcOnLoad="[^"]*"/, '')} fullCalcOnLoad="1"/>`) : wb.replace('</workbook>', '<calcPr fullCalcOnLoad="1"/></workbook>');
+    put('xl/workbook.xml', wb);
+    const semCadeia = ents.filter(z => z.name !== 'xl/calcChain.xml');
+    if (semCadeia.length !== ents.length) { put('[Content_Types].xml', get('[Content_Types].xml').replace(/<Override[^>]*calcChain[^>]*\/>/, '')); put('xl/_rels/workbook.xml.rels', get('xl/_rels/workbook.xml.rels').replace(/<Relationship[^>]*calcChain[^>]*\/>/, '')); }
+    const blob = zipBytes(semCadeia.map(z => [z.name, z.bytes]));
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `OPR ${M().cliente || ''} ${MESES[ref()]} - ${y}.xlsx`.replace(/\s+/g, ' ');
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  const crc32 = u8 => { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  function zipBytes(files) {
+    const enc = new TextEncoder(), parts = [], cen = []; let off = 0;
+    for (const [name, data] of files) {
+      const nb = enc.encode(name), crc = crc32(data);
+      const lh = new DataView(new ArrayBuffer(30));
+      lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, nb.length, true);
+      parts.push(new Uint8Array(lh.buffer), nb, data);
+      const ch = new DataView(new ArrayBuffer(46));
+      ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, nb.length, true); ch.setUint32(42, off, true);
+      cen.push(new Uint8Array(ch.buffer), nb);
+      off += 30 + nb.length + data.length;
+    }
+    const cs = cen.reduce((a, b) => a + b.length, 0), end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cs, true); end.setUint32(16, off, true);
+    return new Blob([...parts, ...cen, new Uint8Array(end.buffer)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   }
   function sResumo() {
     const e = E(), m = M(), r = ref(), cs = [];
@@ -2257,18 +2431,18 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
     const faltam = pendencias();
     const ul = (arr, ph) => arr.length ? `<ul>${arr.map(l => `<li>${esc(l)}</li>`).join('')}</ul>` : `<p class="ph">${ph}</p>`;
     return slide('foco', 'Fechamento', 'Pontos de atenção e próximos passos', `<div class="duo"><div class="iabox"><h4>Foco da diretoria</h4>${ul(foco.length ? foco : auto, 'Gere a análise do agente para preencher.')}</div><div class="iabox"><h4>Pendências de informação</h4>${ul(pend.length ? pend : faltam, 'Nenhuma pendência.')}</div></div>`,
-      { sub: foco.length ? 'Leitura do agente Interagir, revisada pela consultoria' : 'Pontos automáticos a partir dos números · gere a análise do agente para completar' });
+      { sub: foco.length ? 'Leitura do agente Intragen, revisada pela consultoria' : 'Pontos automáticos a partir dos números · gere a análise do agente para completar' });
   }
   // SLIDE FANTASMA: o que vai para o agente + os apontamentos dele para a consultora (não entra na apresentação nem no PDF)
   function sFantasma() {
     if (ST.imprimir) return '';
     const ap = (ST.copilot.APONTAMENTOS || '').split('\n').map(l => l.replace(/^[-•*]\s*/, '').trim()).filter(Boolean);
     const txt = PROMPT + pacote();
-    return `<section class="slide fantasma" id="fantasma" data-secao="Bastidores" data-titulo="Slide fantasma · dados e apontamentos do Interagir">
+    return `<section class="slide fantasma" id="fantasma" data-secao="Bastidores" data-titulo="Slide fantasma · dados e apontamentos do Intragen">
       <div class="fx">👻 Slide fantasma · só para a consultora · não aparece no ▶ Apresentar nem no PDF</div>
-      <header class="nh"><div><h2>Bastidores da RAR</h2><p class="nsub">O que vai para o agente Interagir e o que ele aponta antes da reunião</p></div></header>
+      <header class="nh"><div><h2>Bastidores da RAR</h2><p class="nsub">O que vai para o agente Intragen e o que ele aponta antes da reunião</p></div></header>
       <div class="sb"><div class="duo">
-        <div><h4 class="h4">Apontamentos do Interagir</h4>${ap.length ? `<ul class="apt">${ap.map(l => `<li>${esc(l)}</li>`).join('')}</ul>` : '<p class="ph">Clique em ✦ Gerar leitura. Além da leitura de cada slide, o Interagir devolve aqui as críticas: números que merecem checagem, inconsistências entre as fontes, perguntas que a diretoria provavelmente vai fazer e o que falta para a análise ficar completa.</p>'}
+        <div><h4 class="h4">Apontamentos do agente Intragen</h4>${ap.length ? `<ul class="apt">${ap.map(l => `<li>${esc(l)}</li>`).join('')}</ul>` : '<p class="ph">Clique em ✦ Gerar leitura. Além da leitura de cada slide, o agente Intragen devolve aqui as críticas: números que merecem checagem, inconsistências entre as fontes, perguntas que a diretoria provavelmente vai fazer e o que falta para a análise ficar completa.</p>'}
           <h4 class="h4" style="margin-top:16px">Pendências que a página encontrou</h4><ul class="apt">${pendencias().map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>
         <div><h4 class="h4">Dados enviados ao agente <small class="hint">${txt.length.toLocaleString('pt-BR')} caracteres</small></h4><pre class="pk">${esc(txt)}</pre></div>
       </div></div></section>`;
@@ -2285,18 +2459,28 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
     const secs = {}; document.querySelectorAll('.slide').forEach(s => (secs[s.dataset.secao] = secs[s.dataset.secao] || []).push(s));
     $('#indice').innerHTML = Object.entries(secs).map(([sec, arr]) => `<div class="isec">${esc(sec)}</div>${arr.map(s => `<a href="#${s.id}">${esc(s.dataset.titulo)}</a>`).join('')}`).join('');
     document.querySelectorAll('[data-ed]').forEach(el => el.addEventListener('input', () => { ST.edit[el.dataset.ed] = el.innerHTML; }));
+    // OPR: valor digitado na célula
+    document.querySelectorAll('[data-opm]').forEach(el => {
+      el.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); el.blur(); } });
+      el.addEventListener('blur', () => {
+        const [k, c] = el.dataset.opm.split('|'), d = OPR_DEF.find(x => x.k === k), v = lerNumero(el.innerText, d.f === 'P');
+        ST.oprMan[k] = ST.oprMan[k] || {};
+        if (v == null && !el.innerText.trim()) delete ST.oprMan[k][c]; else if (v != null) ST.oprMan[k][c] = v; else return;
+        rerenderKeep();
+      });
+    });
     if (document.body.classList.contains('apresentando')) irPara(atual);
   }
   function rerenderKeep() { const y = window.scrollY; render(); if (!document.body.classList.contains('apresentando')) window.scrollTo(0, y); }
 
-  // ------------------------------------------------------------------ AGENTE INTERAGIR
+  // ------------------------------------------------------------------ AGENTE INTRAGEN
   function pendencias() {
     const m = M(), e = E(), p = []; if (!m) return p;
     if (!m.caixa) p.push('DFC do mês');
     if (!m.orc) p.push('DRE (orçado × realizado)');
     if (!e.fat) p.push('faturamento (aba Faturamento)');
-    if (!e.opr) p.push('planilha do OPR do mês');
-    else if (e.opr.periodo && !new RegExp(MES3[ref()], 'i').test(e.opr.periodo)) p.push(`OPR desatualizado (${e.opr.periodo})`);
+    if (!ST.M0) p.push(`DFC de ${ano() - 1} (coluna do ano anterior do OPR)`);
+    if (m.caixa) { const f = oprAuto().filter(d => d.falta.length).map(d => `${d.nome.replace(/[^\p{L}\p{N} :]/gu, '').trim()} (${d.falta.map(c => c === 'atual' ? ano() : c === 'ant' ? ano() - 1 : 'orçamento').join(', ')})`); if (f.length) p.push('OPR sem: ' + f.join('; ')); }
     p.push('acompanhamento de vendas por representante e premiação', 'relatório de prazo médio de recebimento', 'estoque por família (maiores itens)');
     if (!e.inad) p.push('títulos vencidos (inadimplência)');
     const inc = cmvIncompleto(); if (inc.length) p.push(`CMV não lançado em ${inc.map(x => x.m.toLowerCase()).join(', ')}`);
@@ -2308,7 +2492,7 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
     L.push(`CLIENTE: ${m.cliente || '-'} | MÊS DE REFERÊNCIA: ${MESES[r]}/${y} | Valores em R$, acumulado = jan a ${MES3[r].toLowerCase()}`);
     L.push(`\n[PENDÊNCIAS - avise que a análise é parcial nestes pontos]\n${pendencias().join('; ')}`);
     if ((ST.contexto || '').trim()) L.push(`\n[CONTEXTO DA CONSULTORIA]\n${ST.contexto.trim()}`);
-    if (e.opr) { L.push(`\n[OPR ${e.opr.periodo}] indicador: ${e.opr.anoAtual} | ${e.opr.anoAnt} | orçamento | comentário atual`); e.opr.linhas.forEach(l => { if (l.atual != null || l.coment) L.push(`${l.nome.replace(/[^\p{L}\p{N} .,/()%-]/gu, '').replace(/\s+/g, ' ').trim()}: ${fmtInd(l, l.atual)} | ${fmtInd(l, l.ant)} | ${fmtInd(l, l.orc)} | ${l.coment || '-'}`); }); }
+    if (m.caixa) { L.push(`\n[OPR ${oprPeriodo()}] indicador: ${y} | ${y - 1} | orçamento | var vs ${y - 1} | var vs orç | status`); oprAuto().forEach(d => { const fv = v => v == null ? '-' : d.f === 'P' ? fmtPc(v) : d.f === 'N' ? fmtQ(v) : fmtC(v); L.push(`${d.nome.replace(/[^\p{L}\p{N} .,/()%:-]/gu, '').replace(/\s+/g, ' ').trim()}: ${fv(d.atual)} | ${fv(d.ant)} | ${fv(d.orc)} | ${d.v1 == null ? '-' : fmtP(d.v1)} | ${d.v2 == null ? '-' : fmtP(d.v2)} | ${d.status}${d.cmvAviso ? ' (' + d.cmvAviso + ')' : ''}`); }); }
     if (e.fat) {
       const ra = ytd(e.fat.real), oa = ytd(e.fat.orc), ant = e.fat.hist[y - 1] ? ytd(e.fat.hist[y - 1]) : 0;
       L.push(`\n[FATURAMENTO] acumulado: ${n(ra)} | orçado ${n(oa)} (${fmtP(pct(ra, oa))}) | ${y - 1}: ${n(ant)} (${fmtP(pct(ra, ant))})`);
@@ -2337,11 +2521,11 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
     return L.join('\n');
   }
   const MARCAS = ['RESUMO', 'OPR', 'FATURAMENTO', 'PRODUTOS_CLIENTES', 'BONIFICACAO', 'RECEBIMENTO', 'CAIXA', 'COMPRAS_ESTOQUE', 'RESULTADO', 'INADIMPLENCIA', 'FOCO', 'PENDENCIAS', 'APONTAMENTOS'];
-  const PROMPT = `Você é o Interagir, analista financeiro sênior da KND. Escreva a leitura da RAR no modelo narrativo, com os marcadores ${MARCAS.map(m => '[' + m + ']').join(' ')}, usando somente os DADOS abaixo e o contexto da consultoria. Não recalcule números. Gere a leitura completa agora, sem perguntas e sem pedir arquivos: o que faltar vai em [PENDENCIAS].
+  const PROMPT = `Você é o Assistente Intragen, analista financeiro sênior da KND. Escreva a leitura da RAR no modelo narrativo, com os marcadores ${MARCAS.map(m => '[' + m + ']').join(' ')}, usando somente os DADOS abaixo e o contexto da consultoria. Não recalcule números. Gere a leitura completa agora, sem perguntas e sem pedir arquivos: o que faltar vai em [PENDENCIAS].
 
 DADOS:
 `;
-  const agenteUrl = () => AGENTE_INTERAGIR;
+  const agenteUrl = () => AGENTE_INTRAGEN;
   function atualizarPacote() {
     const txt = PROMPT + pacote();
     $('#cp-pacote').value = txt;
@@ -2362,7 +2546,7 @@ DADOS:
     const txt = PROMPT + pacote(); atualizarPacote();
     const ok = copiarTexto(txt);
     $('#copilot').classList.add('on'); $('#cp-msg').textContent = '';
-    if (ok) { window.open(agenteUrl(), '_blank', 'noopener'); $('#cp-aviso').innerHTML = `<b>✓ Dados copiados (${txt.length.toLocaleString('pt-BR')} caracteres).</b> No agente Interagir, aperte <b>Ctrl+V</b> e <b>Enter</b>. Na resposta, copie o bloco e cole aqui embaixo: a apresentação é atualizada na hora.`; }
+    if (ok) { window.open(agenteUrl(), '_blank', 'noopener'); $('#cp-aviso').innerHTML = `<b>✓ Dados copiados (${txt.length.toLocaleString('pt-BR')} caracteres).</b> No agente Intragen, aperte <b>Ctrl+V</b> e <b>Enter</b>. Na resposta, copie o bloco e cole aqui embaixo: a apresentação é atualizada na hora.`; }
     else $('#cp-aviso').innerHTML = `<b>O navegador não deixou copiar automaticamente.</b> Clique em <b>Copiar dados</b> e depois em <b>Abrir agente</b>.`;
     setTimeout(() => $('#cp-resposta').focus(), 300);
   }
@@ -2376,7 +2560,7 @@ DADOS:
   function fecharEMostrar(n) {
     $('#copilot').classList.remove('on');
     const alvo = document.getElementById('resumo'); if (alvo) { if (document.body.classList.contains('apresentando')) irPara(slides().indexOf(alvo)); else alvo.scrollIntoView({ behavior: 'smooth' }); }
-    const t = $('#toast'); t.textContent = `✓ Leitura do Interagir aplicada (${n} blocos)${ST.copilot.APONTAMENTOS ? ' · veja os apontamentos no slide fantasma, no fim' : ''}`; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 3500);
+    const t = $('#toast'); t.textContent = `✓ Leitura do agente Intragen aplicada (${n} blocos)${ST.copilot.APONTAMENTOS ? ' · veja os apontamentos no slide fantasma, no fim' : ''}`; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 3500);
   }
 
   // ------------------------------------------------------------------ carregar
@@ -2391,7 +2575,15 @@ DADOS:
     ST.fonte = fonte; ST.M = KND.montarTudo(fonte); erros.push(...ST.M.erros);
     const m = ST.M;
     if (!m.caixa) { $('#status').innerHTML = `<div class="st warn"><b>⚠ Não encontrei o DFC</b><small>Solte o arquivo "DFC ${new Date().getFullYear()} – cliente" com as abas DFC, DRE, Faturamento, Saldos…</small></div>`; return; }
-    ST.E = await NarrDados.extrair(planilhas, m.ano, m.ref);
+    // arquivos do ano atual × do ano anterior (o DFC do ano anterior alimenta a coluna do ano anterior no OPR)
+    const anoDe = f => { const l = lidos.find(x => x.arquivo === f.name); return l ? l.ano : null; };
+    const doAno = planilhas.filter(f => anoDe(f) == null || anoDe(f) >= m.ano), anteriores = planilhas.filter(f => anoDe(f) === m.ano - 1);
+    ST.E = await NarrDados.extrair(doAno, m.ano, m.ref);
+    ST.M0 = null; ST.E0 = null; ST.arqAnt = ''; ST.oprMan = {};
+    if (anteriores.length) {
+      try { const r0 = await KND.carregar(anteriores, () => { }); const m0 = KND.montarTudo(r0.fonte); if (m0.caixa || m0.orc) { ST.M0 = m0; ST.E0 = await NarrDados.extrair(anteriores, m.ano - 1, m.ref); ST.arqAnt = anteriores.map(f => f.name).join(', '); } } catch (err) { erros.push('DFC do ano anterior: ' + err.message); }
+    }
+    ST.oprTpl = ST.E.opr ? planilhas.find(f => ST.E.fontes.opr.startsWith(f.name + ' ›')) : null;
     if (!m.cliente) { const o = ST.E.opr; m.cliente = (o && o.empresa) || (planilhas.map(f => / - ([^.]+)\.xls/i.exec(f.name)).find(Boolean) || [])[1] || ''; }
     if (ST.nomeCliente) m.cliente = ST.nomeCliente; else ST.nomeCliente = m.cliente;
     $('#cfg-cliente').value = m.cliente || '';
@@ -2400,7 +2592,9 @@ DADOS:
       linha(!!m.caixa, 'DFC (caixa)', m.caixa ? `${fonte.caixa.arquivo} › ${fonte.caixa.aba} · até ${MESES[m.ref].toLowerCase()}` : 'não encontrado') +
       linha(!!m.orc, 'DRE (orçado × realizado)', m.orc ? `${fonte.competencia.aba}` : 'não encontrado') +
       linha(!!m.bancos, 'Saldos bancários', m.bancos ? fonte.bancos.aba : 'não encontrado') +
-      [['fat', 'Faturamento'], ['clientes', 'Faturamento por cliente'], ['produtos', 'Faturamento por produto'], ['bonif', 'Bonificação'], ['compras', 'Compras'], ['estoque', 'Estoque'], ['inad', 'Inadimplência'], ['opr', 'OPR']].map(([k, n2]) => linha(!!e[k], n2, e.fontes[k] || 'não encontrado')).join('') +
+      linha(!!ST.M0, `DFC de ${m.ano - 1} (ano anterior do OPR)`, ST.M0 ? ST.arqAnt : 'solte também o DFC do ano anterior') +
+      [['fat', 'Faturamento'], ['clientes', 'Faturamento por cliente'], ['produtos', 'Faturamento por produto'], ['bonif', 'Bonificação'], ['compras', 'Compras'], ['estoque', 'Estoque'], ['inad', 'Inadimplência']].map(([k, n2]) => linha(!!e[k], n2, e.fontes[k] || 'não encontrado')).join('') +
+      linha(true, 'OPR', `montado automaticamente (YTD jan–${MES3[m.ref].toLowerCase()})${e.opr ? ' · modelo do Excel: ' + e.fontes.opr : ' · para baixar em Excel, solte a planilha do OPR'}`) +
       linha(false, 'Vendas por representante', 'pendente – arquivo de acompanhamento de vendas') + linha(false, 'Prazo médio de recebimento', 'pendente – relatório de prazo médio') +
       (m.caixa.avisos.length ? `<div class="st warn"><b>⚠ Conferência</b>${m.caixa.avisos.map(a => `<small>${esc(a)}</small>`).join('')}</div>` : '') +
       (erros.length ? `<div class="st warn"><b>⚠ Não consegui ler</b>${erros.map(a => `<small>${esc(a)}</small>`).join('')}</div>` : '');
@@ -2452,11 +2646,12 @@ DADOS:
     $('#cp-resposta').addEventListener('paste', () => setTimeout(() => {
       const v = $('#cp-resposta').value.trim();
       if (/\[(RESUMO|FATURAMENTO)\]/.test(v)) return $('#cp-aplicar').click();
-      $('#cp-msg').innerHTML = `<span class="alerta">O que foi colado não é a leitura do agente. Na resposta do Interagir, selecione o texto com o mouse (do [RESUMO] até o fim), aperte Ctrl+C e cole aqui de novo.</span>`;
+      $('#cp-msg').innerHTML = `<span class="alerta">O que foi colado não é a leitura do agente. Na resposta do agente Intragen, selecione o texto com o mouse (do [RESUMO] até o fim), aperte Ctrl+C e cole aqui de novo.</span>`;
     }, 50));
     $('#cp-aplicar').onclick = () => { const n = aplicarResposta($('#cp-resposta').value); $('#cp-msg').textContent = n ? `✓ ${n} blocos aplicados.` : 'Não encontrei os marcadores [RESUMO], [FATURAMENTO]… na resposta.'; if (n) { rerenderKeep(); fecharEMostrar(n); } };
     $('#btn-pdf').onclick = baixarPDF;
-    $('#link-agente').href = AGENTE_INTERAGIR;
+    $('#btn-opr').onclick = () => baixarOPR().catch(err => alert('Não consegui gerar o OPR: ' + err.message));
+    $('#link-agente').href = AGENTE_INTRAGEN;
     // ditado do contexto (igual ao modelo padrão)
     (() => {
       const btn = $('#btn-mic'), campo = $('#ctx-side'), ua = navigator.userAgent, mac = /Mac|iPhone|iPad/.test(navigator.platform || ua);
