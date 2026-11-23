@@ -226,7 +226,7 @@ body.apresentando main{padding-bottom:60px}
     <label>Logomarca<span><label class="bt mini">Escolher<input class="in-logo" type="file" accept=".png,.jpg,.jpeg,.svg,.webp" multiple hidden></label> <button class="bt mini" id="logo-limpar">Tirar</button></span></label>
     <div id="logo-prev" class="logo-prev"></div></div>
     <h5>Agente Interagir</h5>
-    <div class="cfg"><input id="cfg-agente" type="url" placeholder="Cole aqui o link do agente no Copilot" style="width:100%;text-align:left"><small id="agente-ok" class="hint"></small></div>
+    <div class="cfg"><input id="cfg-agente" type="url" placeholder="Já configurado · cole outro link só se quiser trocar" style="width:100%;text-align:left"><small id="agente-ok" class="hint"></small></div>
     <h5>Contexto do mês <small id="ctx-n" style="float:right;font-weight:400">0/1500</small></h5>
     <button class="bt mini mic" id="btn-mic" type="button" title="Falar o contexto (o texto é transcrito no campo abaixo)">🎤 Falar o contexto</button>
     <p id="mic-dica" class="hint" style="margin:0 0 6px"></p>
@@ -234,7 +234,7 @@ body.apresentando main{padding-bottom:60px}
     <p class="hint">Vai junto com os números para o agente Interagir explicar as variações.</p>
     <h5 class="so-pronto">Sumário</h5><nav id="indice"></nav>
     <p class="hint">Os arquivos são lidos só neste navegador. Nada é enviado para a internet.</p>
-    <p class="hint" style="opacity:.7">Versão 23/11/2026 19:15</p>
+    <p class="hint" style="opacity:.7">Versão 23/11/2026 19:51</p>
   </aside>
   <main>
     <div id="drop">
@@ -1825,6 +1825,8 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
   const esc = Charts.esc;
   const $ = s => document.querySelector(s);
   const AGENTE_PADRAO = 'https://m365.cloud.microsoft/chat';
+  // agente Interagir (Copilot) – já vem configurado; o campo da lateral só serve para trocar
+  const AGENTE_INTERAGIR = 'https://copilot.cloud.microsoft/chat/agent/T_85fd9225-041e-cf52-86ac-abfa91ada953.d185e6a9-e6fa-4c02-b2f1-6f4e1e8e288f.gpt.a4f92c33-0be7-48d3-927a-be57a1772cfa';
   const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { } };
   const ST = {
@@ -2321,7 +2323,7 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
 
 DADOS:
 `;
-  const agenteUrl = () => (ST.agente || '').trim() || AGENTE_PADRAO;
+  const agenteUrl = () => (ST.agente || '').trim() || AGENTE_INTERAGIR;
   function atualizarPacote() {
     const txt = PROMPT + pacote();
     $('#cp-pacote').value = txt;
@@ -2342,8 +2344,7 @@ DADOS:
     const txt = PROMPT + pacote(); atualizarPacote();
     const ok = copiarTexto(txt);
     $('#copilot').classList.add('on'); $('#cp-msg').textContent = '';
-    if (!ST.agente) $('#cp-aviso').innerHTML = `<b>Falta o link do agente Interagir.</b> Cole o link dele no campo "Link do agente" na barra à esquerda (fica guardado neste navegador). ${ok ? 'Os dados já foram copiados: por enquanto, abri o Copilot comum.' : ''}`;
-    if (ok) { window.open(agenteUrl(), '_blank', 'noopener'); if (ST.agente) $('#cp-aviso').innerHTML = `<b>✓ Dados copiados (${txt.length.toLocaleString('pt-BR')} caracteres).</b> No agente Interagir, aperte <b>Ctrl+V</b> e <b>Enter</b>. Na resposta, copie o bloco e cole aqui embaixo: a apresentação é atualizada na hora.`; }
+    if (ok) { window.open(agenteUrl(), '_blank', 'noopener'); $('#cp-aviso').innerHTML = `<b>✓ Dados copiados (${txt.length.toLocaleString('pt-BR')} caracteres).</b> No agente Interagir, aperte <b>Ctrl+V</b> e <b>Enter</b>. Na resposta, copie o bloco e cole aqui embaixo: a apresentação é atualizada na hora.`; }
     else $('#cp-aviso').innerHTML = `<b>O navegador não deixou copiar automaticamente.</b> Clique em <b>Copiar dados</b> e depois em <b>Abrir agente</b>.`;
     setTimeout(() => $('#cp-resposta').focus(), 300);
   }
@@ -2438,8 +2439,8 @@ DADOS:
     $('#cp-aplicar').onclick = () => { const n = aplicarResposta($('#cp-resposta').value); $('#cp-msg').textContent = n ? `✓ ${n} blocos aplicados.` : 'Não encontrei os marcadores [RESUMO], [FATURAMENTO]… na resposta.'; if (n) { rerenderKeep(); fecharEMostrar(n); } };
     $('#btn-pdf').onclick = baixarPDF;
     $('#cfg-agente').value = ST.agente;
-    $('#cfg-agente').addEventListener('change', e => { ST.agente = e.target.value.trim(); lsSet('knd-agente-interagir', ST.agente); $('#agente-ok').textContent = ST.agente ? '✓ guardado neste navegador' : ''; });
-    $('#agente-ok').textContent = ST.agente ? '✓ guardado neste navegador' : '';
+    $('#cfg-agente').addEventListener('change', e => { ST.agente = e.target.value.trim(); lsSet('knd-agente-interagir', ST.agente); $('#agente-ok').textContent = ST.agente ? '✓ link próprio guardado neste navegador' : '✓ usando o Interagir da KND'; });
+    $('#agente-ok').textContent = ST.agente ? '✓ link próprio guardado neste navegador' : '✓ usando o Interagir da KND';
     // ditado do contexto (igual ao modelo padrão)
     (() => {
       const btn = $('#btn-mic'), campo = $('#ctx-side'), ua = navigator.userAgent, mac = /Mac|iPhone|iPad/.test(navigator.platform || ua);
