@@ -226,7 +226,7 @@ body.apresentando main{padding-bottom:60px}
     <label>Logomarca<span><label class="bt mini">Escolher<input class="in-logo" type="file" accept=".png,.jpg,.jpeg,.svg,.webp" multiple hidden></label> <button class="bt mini" id="logo-limpar">Tirar</button></span></label>
     <div id="logo-prev" class="logo-prev"></div></div>
     <h5>Agente Interagir</h5>
-    <div class="cfg"><input id="cfg-agente" type="url" placeholder="Já configurado · cole outro link só se quiser trocar" style="width:100%;text-align:left"><small id="agente-ok" class="hint"></small></div>
+    <p class="hint" style="margin:0">O botão <b>✦ Gerar leitura</b> copia os dados e abre o Interagir. <a id="link-agente" href="#" target="_blank" rel="noopener">Abrir o Interagir ↗</a></p>
     <h5>Contexto do mês <small id="ctx-n" style="float:right;font-weight:400">0/1500</small></h5>
     <button class="bt mini mic" id="btn-mic" type="button" title="Falar o contexto (o texto é transcrito no campo abaixo)">🎤 Falar o contexto</button>
     <p id="mic-dica" class="hint" style="margin:0 0 6px"></p>
@@ -234,7 +234,7 @@ body.apresentando main{padding-bottom:60px}
     <p class="hint">Vai junto com os números para o agente Interagir explicar as variações.</p>
     <h5 class="so-pronto">Sumário</h5><nav id="indice"></nav>
     <p class="hint">Os arquivos são lidos só neste navegador. Nada é enviado para a internet.</p>
-    <p class="hint" style="opacity:.7">Versão 23/11/2026 19:51</p>
+    <p class="hint" style="opacity:.7">Versão 23/11/2026 19:54</p>
   </aside>
   <main>
     <div id="drop">
@@ -1831,7 +1831,6 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { } };
   const ST = {
     M: null, E: {}, copilot: {}, edit: {}, abas: {}, contexto: '', imprimir: false,
-    agente: lsGet('knd-agente-interagir'),
     logos: { knd: (window.KND_ASSETS || {}).kndEscuro || '', kndBranco: (window.KND_ASSETS || {}).kndBranco || '', capa: (window.KND_ASSETS || {}).capa || '', cliente: [] },
   };
   const C = { navy: '#14283B', azul: '#0E6EAF', claro: '#6CC7EF', cinza: '#C5CFD8', pos: '#0A8A8F', neg: '#B5473A', ambar: '#D9A520' };
@@ -2323,7 +2322,7 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
 
 DADOS:
 `;
-  const agenteUrl = () => (ST.agente || '').trim() || AGENTE_INTERAGIR;
+  const agenteUrl = () => AGENTE_INTERAGIR;
   function atualizarPacote() {
     const txt = PROMPT + pacote();
     $('#cp-pacote').value = txt;
@@ -2438,9 +2437,7 @@ DADOS:
     }, 50));
     $('#cp-aplicar').onclick = () => { const n = aplicarResposta($('#cp-resposta').value); $('#cp-msg').textContent = n ? `✓ ${n} blocos aplicados.` : 'Não encontrei os marcadores [RESUMO], [FATURAMENTO]… na resposta.'; if (n) { rerenderKeep(); fecharEMostrar(n); } };
     $('#btn-pdf').onclick = baixarPDF;
-    $('#cfg-agente').value = ST.agente;
-    $('#cfg-agente').addEventListener('change', e => { ST.agente = e.target.value.trim(); lsSet('knd-agente-interagir', ST.agente); $('#agente-ok').textContent = ST.agente ? '✓ link próprio guardado neste navegador' : '✓ usando o Interagir da KND'; });
-    $('#agente-ok').textContent = ST.agente ? '✓ link próprio guardado neste navegador' : '✓ usando o Interagir da KND';
+    $('#link-agente').href = AGENTE_INTERAGIR;
     // ditado do contexto (igual ao modelo padrão)
     (() => {
       const btn = $('#btn-mic'), campo = $('#ctx-side'), ua = navigator.userAgent, mac = /Mac|iPhone|iPad/.test(navigator.platform || ua);
