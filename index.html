@@ -215,6 +215,13 @@ body.apresentando main{padding-bottom:60px}
 .opr-x td.warn{color:#B5473A;font-weight:600}.opr-x td[contenteditable]:focus{outline:2px solid #6CC7EF;background:#fff}
 .opr-x sup{color:#0C3F76;margin-left:1px}.oprn{margin-top:8px}
 @media print{.oprn{display:none}.opr-x td.opm.vazio{background:none}.opr-x td.opm.vazio:before{content:"—"}}
+.callout.ia3{background:#fff;border:1px solid #cfe0ec;border-left:4px solid #0E6EAF;padding:10px 14px}
+.iah{display:inline-block;background:#14283B;color:#fff;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;border-radius:10px;padding:3px 10px;margin-bottom:8px;font-weight:700}
+.iat{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-top:1px solid #eef2f5;font-size:13.5px;line-height:1.35}.iah+.iat{border-top:none}
+.iat i{font-style:normal;font-size:11px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px}
+.iat.up i{background:#e0f2ef;color:#0A8A8F}.iat.down i{background:#fbe9e6;color:#B5473A}.iat.neu i{background:#e3f1fa;color:#0E6EAF}
+.iat b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#5d6d7b;margin-bottom:1px}
+.iat em{font-style:normal;font-weight:700;color:#14283B}.iat.up em{color:#0A8A8F}.iat.down em{color:#B5473A}
 /* ---------- impressão / PDF ---------- */
 @media print{
   @page{size:A4 landscape;margin:0}
@@ -253,7 +260,7 @@ body.apresentando main{padding-bottom:60px}
     <p class="hint">Vai junto com os números para o agente Intragen explicar as variações.</p>
     <h5 class="so-pronto">Sumário</h5><nav id="indice"></nav>
     <p class="hint">Os arquivos são lidos só neste navegador. Nada é enviado para a internet.</p>
-    <p class="hint" style="opacity:.7">Versão 23/11/2026 20:44</p>
+    <p class="hint" style="opacity:.7">Versão 23/11/2026 20:52</p>
   </aside>
   <main>
     <div id="drop">
@@ -1893,12 +1900,27 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
   // cartão de número (rótulo, valor grande, explicação)
   const card = (rot, val, det, tom) => `<div class="ncard ${tom || ''}"><span class="nl">${esc(rot)}</span><span class="nv">${val}</span>${det ? `<span class="nd">${det}</span>` : ''}</div>`;
   // quadro de leitura: texto automático, trocado pela análise do agente e editável
+  // tópicos do agente → cartões curtos: ▲ positivo, ▼ atenção, ● neutro; "Rótulo: frase"; números em destaque
+  const TONS = { '▲': 'up', '▼': 'down', '●': 'neu' };
+  function topicosIA(txt, max = 3) {
+    return txt.split('\n').map(l => l.replace(/^[-•*]\s*/, '').trim()).filter(Boolean).slice(0, max).map(l => {
+      let tom = 'neu'; const t0 = l.charAt(0);
+      if (TONS[t0]) { tom = TONS[t0]; l = l.slice(1).trim(); }
+      else if (/(abaixo|queda|caiu|risco|aten[cç][aã]o|superestim|pend|falta|aument\w* (da |do )?(inadimpl|estoque|contas a receber))/i.test(l)) tom = 'down';
+      else if (/(acima|cresc|super[aá]vit|recorde|melhor|alta de)/i.test(l)) tom = 'up';
+      const mm = /^([^:]{3,40}):\s*(.+)$/.exec(l), rot = mm ? mm[1] : '', fr = mm ? mm[2] : l;
+      const destaque = esc(fr).replace(/([+\-−]?R\$\s?[\d.,]+(?:\s?(?:mi|mil))?|[+\-−]?\d+(?:[.,]\d+)?\s?%|\d+ de \d+)/g, '<em>$1</em>');
+      return `<div class="iat ${tom}"><i>${tom === 'up' ? '▲' : tom === 'down' ? '▼' : '●'}</i><span>${rot ? `<b>${esc(rot)}</b>` : ''}${destaque}</span></div>`;
+    }).join('');
+  }
   function leitura(chave, titulo, texto, tom = 'info', marcador) {
     const ia = marcador && ST.copilot[marcador];
-    const corpo = ia ? ia.split('\n').map(l => l.replace(/^[-•*]\s*/, '').trim()).filter(Boolean).map(l => `<p>${esc(l)}</p>`).join('') : `<p>${texto}</p>`;
-    const tt = ia ? 'Leitura da consultoria' : titulo;
-    const html = `<b>${esc(tt)}</b>${corpo}`;
-    return `<div class="callout ${ia ? 'ia' : tom}"><div class="ed" contenteditable="true" data-ed="${chave}">${ST.edit[chave] != null ? ST.edit[chave] : html}</div></div>`;
+    if (ia) {
+      const html = `<div class="iah">✦ Análise KND 3.0 · Agente</div>${topicosIA(ia)}`;
+      return `<div class="callout ia3"><div class="ed" contenteditable="true" data-ed="${chave}">${ST.edit[chave] != null ? ST.edit[chave] : html}</div></div>`;
+    }
+    const html = `<b>${esc(titulo)}</b><p>${texto}</p>`;
+    return `<div class="callout ${tom}"><div class="ed" contenteditable="true" data-ed="${chave}">${ST.edit[chave] != null ? ST.edit[chave] : html}</div></div>`;
   }
   const nar = (esq, dir) => `<div class="nar"><div class="ne">${esq}</div><div class="nd2">${dir}</div></div>`;
   const pendente = (oque, arquivo) => `<div class="pendente"><b>Informação pendente</b><p>${oque}</p><p class="pa">Para completar este slide, solte junto: <b>${esc(arquivo)}</b>.</p></div>`;
@@ -2429,9 +2451,9 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
     const i = E().inad; if (i) { const T = i.titulos.filter(t => t.dias > 90); if (T.length) auto.push(`Cobrança dos títulos acima de 90 dias (${fmtC(T.reduce((a, t) => a + t.val, 0))}).`); }
     const inc = cmvIncompleto(); if (inc.length) auto.push(`Lançar o CMV de ${inc.map(x => x.m.toLowerCase()).join(', ')} para fechar a DRE.`);
     const faltam = pendencias();
-    const ul = (arr, ph) => arr.length ? `<ul>${arr.map(l => `<li>${esc(l)}</li>`).join('')}</ul>` : `<p class="ph">${ph}</p>`;
+    const ul = (arr, ph) => arr.length ? `<ul>${arr.map(l => `<li>${esc(l.replace(/^[▲▼●]\s*/, ''))}</li>`).join('')}</ul>` : `<p class="ph">${ph}</p>`;
     return slide('foco', 'Fechamento', 'Pontos de atenção e próximos passos', `<div class="duo"><div class="iabox"><h4>Foco da diretoria</h4>${ul(foco.length ? foco : auto, 'Gere a análise do agente para preencher.')}</div><div class="iabox"><h4>Pendências de informação</h4>${ul(pend.length ? pend : faltam, 'Nenhuma pendência.')}</div></div>`,
-      { sub: foco.length ? 'Leitura do agente Intragen, revisada pela consultoria' : 'Pontos automáticos a partir dos números · gere a análise do agente para completar' });
+      { sub: foco.length ? 'Análise KND 3.0 · Agente, revisada pela consultoria' : 'Pontos automáticos a partir dos números · gere a análise do agente para completar' });
   }
   // SLIDE FANTASMA: o que vai para o agente + os apontamentos dele para a consultora (não entra na apresentação nem no PDF)
   function sFantasma() {
@@ -2442,7 +2464,7 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
       <div class="fx">👻 Slide fantasma · só para a consultora · não aparece no ▶ Apresentar nem no PDF</div>
       <header class="nh"><div><h2>Bastidores da RAR</h2><p class="nsub">O que vai para o agente Intragen e o que ele aponta antes da reunião</p></div></header>
       <div class="sb"><div class="duo">
-        <div><h4 class="h4">Apontamentos do agente Intragen</h4>${ap.length ? `<ul class="apt">${ap.map(l => `<li>${esc(l)}</li>`).join('')}</ul>` : '<p class="ph">Clique em ✦ Gerar leitura. Além da leitura de cada slide, o agente Intragen devolve aqui as críticas: números que merecem checagem, inconsistências entre as fontes, perguntas que a diretoria provavelmente vai fazer e o que falta para a análise ficar completa.</p>'}
+        <div><h4 class="h4">Apontamentos do agente Intragen</h4>${ap.length ? `<div class="callout ia3"><div class="iah">✦ Análise KND 3.0 · Agente</div>${topicosIA(ap.join('\n'), 8)}</div>` : '<p class="ph">Clique em ✦ Gerar leitura. Além da leitura de cada slide, o agente Intragen devolve aqui as críticas: números que merecem checagem, inconsistências entre as fontes, perguntas que a diretoria provavelmente vai fazer e o que falta para a análise ficar completa.</p>'}
           <h4 class="h4" style="margin-top:16px">Pendências que a página encontrou</h4><ul class="apt">${pendencias().map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>
         <div><h4 class="h4">Dados enviados ao agente <small class="hint">${txt.length.toLocaleString('pt-BR')} caracteres</small></h4><pre class="pk">${esc(txt)}</pre></div>
       </div></div></section>`;
