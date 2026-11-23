@@ -239,7 +239,7 @@ body.apresentando main{padding-bottom:60px}
     <p class="hint">Vai junto com os números para o agente Interagir explicar as variações.</p>
     <h5 class="so-pronto">Sumário</h5><nav id="indice"></nav>
     <p class="hint">Os arquivos são lidos só neste navegador. Nada é enviado para a internet.</p>
-    <p class="hint" style="opacity:.7">Versão 23/11/2026 19:58</p>
+    <p class="hint" style="opacity:.7">Versão 23/11/2026 20:04</p>
   </aside>
   <main>
     <div id="drop">
@@ -2337,7 +2337,7 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
     return L.join('\n');
   }
   const MARCAS = ['RESUMO', 'OPR', 'FATURAMENTO', 'PRODUTOS_CLIENTES', 'BONIFICACAO', 'RECEBIMENTO', 'CAIXA', 'COMPRAS_ESTOQUE', 'RESULTADO', 'INADIMPLENCIA', 'FOCO', 'PENDENCIAS', 'APONTAMENTOS'];
-  const PROMPT = `Você é o Interagir, analista financeiro sênior da KND. Escreva a leitura da RAR no modelo narrativo, com os marcadores ${MARCAS.map(m => '[' + m + ']').join(' ')}, usando somente os DADOS abaixo e o contexto da consultoria. Não recalcule números.
+  const PROMPT = `Você é o Interagir, analista financeiro sênior da KND. Escreva a leitura da RAR no modelo narrativo, com os marcadores ${MARCAS.map(m => '[' + m + ']').join(' ')}, usando somente os DADOS abaixo e o contexto da consultoria. Não recalcule números. Gere a leitura completa agora, sem perguntas e sem pedir arquivos: o que faltar vai em [PENDENCIAS].
 
 DADOS:
 `;
