@@ -264,6 +264,7 @@ body.apresentando main{padding-bottom:60px}
   <button class="bt ia so-pronto" id="btn-copilot">✦ Gerar leitura (agente Intragen)</button>
   <button class="bt pri so-pronto" id="btn-apresentar">▶ Apresentar</button>
   <button class="bt so-pronto" id="btn-pdf">Baixar PDF (todas as abas)</button>
+  <button class="bt so-pronto" id="btn-ppt">Baixar PowerPoint</button>
   <button class="bt so-pronto" id="btn-opr">Baixar OPR (.xlsx)</button>
 </div>
 <div class="wrap">
@@ -282,7 +283,7 @@ body.apresentando main{padding-bottom:60px}
     <p class="hint">Vai junto com os números para o agente Intragen explicar as variações.</p>
     <h5 class="so-pronto">Sumário</h5><nav id="indice"></nav>
     <p class="hint">Os arquivos são lidos só neste navegador. Nada é enviado para a internet.</p>
-    <p class="hint" style="opacity:.7">Versão 23/11/2026 21:07</p>
+    <p class="hint" style="opacity:.7">Versão 23/11/2026 21:44</p>
   </aside>
   <main>
     <div id="drop">
@@ -2157,6 +2158,60 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `OPR ${M().cliente || ''} ${MESES[ref()]} - ${y}.xlsx`.replace(/\s+/g, ' ');
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
   }
+  // ---------------------------------------------------------------- APRESENTAÇÃO EM POWERPOINT (cada slide vira uma imagem fiel, 16:9)
+  async function slidePNG(sl, css, escala = 2) {
+    const cl = sl.cloneNode(true); cl.classList.remove('anim', 'atual', 'flash'); cl.style.zoom = ''; cl.style.transform = 'none'; cl.style.margin = '0';
+    cl.querySelectorAll('[contenteditable]').forEach(x => x.removeAttribute('contenteditable'));
+    const w = sl.offsetWidth, h = sl.offsetHeight;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="width:${w}px"><style>${css}</style>${new XMLSerializer().serializeToString(cl)}</div></foreignObject></svg>`;
+    const img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error('não consegui desenhar o slide ' + (sl.dataset.titulo || ''))); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); });
+    const c = document.createElement('canvas'); c.width = w * escala; c.height = h * escala;
+    const g = c.getContext('2d'); g.scale(escala, escala); g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.drawImage(img, 0, 0);
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
+    return { bytes: new Uint8Array(await blob.arrayBuffer()), w, h };
+  }
+  async function baixarPPT() {
+    if (!ST.M) return alert('Carregue os arquivos primeiro.');
+    const t = $('#toast'), aviso = msg => { t.textContent = msg; t.classList.add('on'); };
+    const estava = document.body.classList.contains('apresentando'); if (estava) apresentar(false);
+    ST.imprimir = true; render(); // todas as abas abertas, sem o slide fantasma
+    const css = [...document.styleSheets].map(sh => { try { return [...sh.cssRules].map(r => r.cssText).join('\n'); } catch (e) { return ''; } }).join('\n')
+      .replace(/@media print\s*\{[\s\S]*?\}\s*\}/g, '').replace(/animation[^;}]*;?/g, '');
+    const ss = slides(), imgs = [];
+    try {
+      for (let i = 0; i < ss.length; i++) { aviso(`Gerando o PowerPoint… slide ${i + 1} de ${ss.length}`); imgs.push(await slidePNG(ss[i], css)); }
+    } catch (err) { ST.imprimir = false; rerenderKeep(); t.classList.remove('on'); return alert(err.message); }
+    ST.imprimir = false; rerenderKeep();
+    const CX = 12192000, CY = 6858000, enc = new TextEncoder(), X = s2 => enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + s2);
+    const nsP = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
+    const R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships', RT = R + '/';
+    const files = [];
+    files.push(['[Content_Types].xml', X(`<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/><Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/><Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/><Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>${imgs.map((_, i) => `<Override PartName="/ppt/slides/slide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`).join('')}</Types>`)]);
+    files.push(['_rels/.rels', X(`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${RT}officeDocument" Target="ppt/presentation.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>`)]);
+    files.push(['docProps/core.xml', X(`<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>RAR ${esc(M().cliente || '')} ${MESES[ref()]}/${ano()}</dc:title><dc:creator>KND · Aceleradora de resultados</dc:creator></cp:coreProperties>`)]);
+    files.push(['ppt/presentation.xml', X(`<p:presentation ${nsP} saveSubsetFonts="1"><p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst><p:sldIdLst>${imgs.map((_, i) => `<p:sldId id="${256 + i}" r:id="rId${i + 3}"/>`).join('')}</p:sldIdLst><p:sldSz cx="${CX}" cy="${CY}"/><p:notesSz cx="6858000" cy="9144000"/><p:defaultTextStyle><a:defPPr><a:defRPr lang="pt-BR"/></a:defPPr></p:defaultTextStyle></p:presentation>`)]);
+    files.push(['ppt/_rels/presentation.xml.rels', X(`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${RT}slideMaster" Target="slideMasters/slideMaster1.xml"/><Relationship Id="rId2" Type="${RT}theme" Target="theme/theme1.xml"/>${imgs.map((_, i) => `<Relationship Id="rId${i + 3}" Type="${RT}slide" Target="slides/slide${i + 1}.xml"/>`).join('')}</Relationships>`)]);
+    const spTree = inner => `<p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>${inner}</p:spTree></p:cSld>`;
+    files.push(['ppt/slideMasters/slideMaster1.xml', X(`<p:sldMaster ${nsP}>${spTree('')}<p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/><p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst><p:txStyles><p:titleStyle><a:lvl1pPr><a:defRPr sz="3200"/></a:lvl1pPr></p:titleStyle><p:bodyStyle><a:lvl1pPr><a:defRPr sz="1800"/></a:lvl1pPr></p:bodyStyle><p:otherStyle><a:lvl1pPr><a:defRPr sz="1800"/></a:lvl1pPr></p:otherStyle></p:txStyles></p:sldMaster>`)]);
+    files.push(['ppt/slideMasters/_rels/slideMaster1.xml.rels', X(`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${RT}slideLayout" Target="../slideLayouts/slideLayout1.xml"/><Relationship Id="rId2" Type="${RT}theme" Target="../theme/theme1.xml"/></Relationships>`)]);
+    files.push(['ppt/slideLayouts/slideLayout1.xml', X(`<p:sldLayout ${nsP} type="blank" preserve="1"><p:cSld name="Em branco"><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>`)]);
+    files.push(['ppt/slideLayouts/_rels/slideLayout1.xml.rels', X(`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${RT}slideMaster" Target="../slideMasters/slideMaster1.xml"/></Relationships>`)]);
+    const cor = (n, h) => `<a:${n}><a:srgbClr val="${h}"/></a:${n}>`;
+    const fill = '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>', ln = w2 => `<a:ln w="${w2}"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln>`;
+    files.push(['ppt/theme/theme1.xml', X(`<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="KND"><a:themeElements><a:clrScheme name="KND"><a:dk1><a:sysClr val="windowText" lastClr="000000"/></a:dk1><a:lt1><a:sysClr val="window" lastClr="FFFFFF"/></a:lt1>${cor('dk2', '14283B')}${cor('lt2', 'EAF5FB')}${cor('accent1', '0E6EAF')}${cor('accent2', '6CC7EF')}${cor('accent3', '0A8A8F')}${cor('accent4', 'B5473A')}${cor('accent5', 'C5CFD8')}${cor('accent6', 'D9A520')}${cor('hlink', '0E6EAF')}${cor('folHlink', '14283B')}</a:clrScheme><a:fontScheme name="KND"><a:majorFont><a:latin typeface="Segoe UI"/><a:ea typeface=""/><a:cs typeface=""/></a:majorFont><a:minorFont><a:latin typeface="Segoe UI"/><a:ea typeface=""/><a:cs typeface=""/></a:minorFont></a:fontScheme><a:fmtScheme name="KND"><a:fillStyleLst>${fill}${fill}${fill}</a:fillStyleLst><a:lnStyleLst>${ln(6350)}${ln(12700)}${ln(19050)}</a:lnStyleLst><a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst><a:bgFillStyleLst>${fill}${fill}${fill}</a:bgFillStyleLst></a:fmtScheme></a:themeElements></a:theme>`)]);
+    imgs.forEach((im, i) => {
+      // cabe inteiro no 16:9, centralizado (slides mais altos ficam com margem branca dos lados)
+      const k = Math.min(CX / im.w, CY / im.h), cw = Math.round(im.w * k), ch = Math.round(im.h * k), x = Math.round((CX - cw) / 2), y = Math.round((CY - ch) / 2);
+      files.push([`ppt/slides/slide${i + 1}.xml`, X(`<p:sld ${nsP}>${spTree(`<p:pic><p:nvPicPr><p:cNvPr id="2" name="Slide ${i + 1}" descr="${esc(ss[i] ? ss[i].dataset.titulo || '' : '')}"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="rId2"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${cw}" cy="${ch}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`)}<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>`)]);
+      files.push([`ppt/slides/_rels/slide${i + 1}.xml.rels`, X(`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${RT}slideLayout" Target="../slideLayouts/slideLayout1.xml"/><Relationship Id="rId2" Type="${RT}image" Target="../media/image${i + 1}.jpg"/></Relationships>`)]);
+      files.push([`ppt/media/image${i + 1}.jpg`, im.bytes]);
+    });
+    const blob = new Blob([zipBytes(files)], { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `RAR ${M().cliente || ''} ${MESES[ref()]} - ${ano()}.pptx`.replace(/\s+/g, ' ');
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    aviso(`✓ PowerPoint gerado (${imgs.length} slides)`); setTimeout(() => t.classList.remove('on'), 3500);
+  }
   const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
   const crc32 = u8 => { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
   function zipBytes(files) {
@@ -2705,6 +2760,7 @@ DADOS:
     }, 50));
     $('#cp-aplicar').onclick = () => { const n = aplicarResposta($('#cp-resposta').value); $('#cp-msg').textContent = n ? `✓ ${n} blocos aplicados.` : 'Não encontrei os marcadores [RESUMO], [FATURAMENTO]… na resposta.'; if (n) { jaAnimou.clear(); rerenderKeep(); fecharEMostrar(n); } };
     $('#btn-pdf').onclick = baixarPDF;
+    $('#btn-ppt').onclick = () => baixarPPT().catch(err => alert('Não consegui gerar o PowerPoint: ' + err.message));
     $('#btn-opr').onclick = () => baixarOPR().catch(err => alert('Não consegui gerar o OPR: ' + err.message));
     $('#link-agente').href = AGENTE_INTRAGEN;
     // ditado do contexto (igual ao modelo padrão)
