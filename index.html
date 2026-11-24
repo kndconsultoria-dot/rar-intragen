@@ -188,6 +188,7 @@ body.apresentando main{padding-bottom:60px}
 .opr-t tr.tpend td{color:var(--muted)}.stt{font-size:10.5px;border-radius:10px;padding:2px 8px}.stt.ok{background:#e0f2ef;color:var(--pos)}.stt.p{background:#fbeede;color:#a86a00}
 .tia{font-style:normal;font-size:9.5px;background:#e0f2ef;color:var(--pos);border-radius:4px;padding:1px 4px}
 .pend-opr{background:#fff6e0;color:#8a5a00;border-radius:6px;padding:6px 10px;font-size:12.5px;margin:0 0 10px}
+.tb td.tl{text-align:left}.tb tr.somb td{background:#E4F1FA}.fam3{display:grid;gap:14px}.fam3 .h4{font-size:13px;margin:0 0 6px}.fam3 .h4 small{display:block;font-weight:400}.bal tr.bh th[colspan]{text-align:center}.fam3 .tb td,.fam3 .tb th{padding:3px 4px}.bal tr.bh th{background:var(--verde);color:#fff}.bal tbody+thead tr.bh th{border-top:10px solid #fff}.bal td.av{color:#6b7c8c;font-size:10px}
 .abc{display:inline-block;width:20px;text-align:center;border-radius:4px;font-weight:700;font-size:11px;color:#fff}.abc.A{background:var(--verde)}.abc.B{background:var(--verde2)}.abc.C{background:#9fb0bf}
 .r100{display:flex;height:74px;border-radius:6px;overflow:hidden}.r100>div{display:flex;flex-direction:column;justify-content:center;padding:0 12px;color:#fff;min-width:0;overflow:hidden}
 .r100 b{font-size:19px}.r100 span{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -283,7 +284,7 @@ body.apresentando main{padding-bottom:60px}
     <p class="hint">Vai junto com os números para o agente Intragen explicar as variações.</p>
     <h5 class="so-pronto">Sumário</h5><nav id="indice"></nav>
     <p class="hint">Os arquivos são lidos só neste navegador. Nada é enviado para a internet.</p>
-    <p class="hint" style="opacity:.7">Versão 23/11/2026 22:00</p>
+    <p class="hint" style="opacity:.7">Versão 24/11/2026 10:47</p>
   </aside>
   <main>
     <div id="drop">
@@ -1791,15 +1792,15 @@ const NarrDados = (() => {
     let hr = -1; for (let r = 0; r < Math.min(grid.length, 10); r++) if ((grid[r] || []).some(v => /^qtde/.test(norm(v)))) { hr = r; break; }
     if (hr < 0) return null;
     const h = grid[hr], ix = re => h.findIndex(v => re.test(norm(v)));
-    const iCli = ix(/^cliente/), iEm = ix(/^emissao/), iCod = ix(/^cod$/), iProd = ix(/^produto$/), iQ = ix(/^qtde/), iVal = ix(/^vlr/), iMes = ix(/^mes$/), iCU = ix(/^custo unitario/), iCT = ix(/^custo total/), iMot = ix(/^motivo/);
+    const iCli = ix(/^cliente/), iEm = ix(/^emissao/), iCod = ix(/^cod$/), iProd = ix(/^produto$/), iQ = ix(/^qtde/), iVal = ix(/^vlr/), iMes = ix(/^mes$/), iCU = ix(/^custo unit/), iCT = ix(/^custo total/), iMot = ix(/motivo agrupado/) >= 0 ? ix(/motivo agrupado/) : ix(/^motivo/);
     const linhas = [];
     for (let r = hr + 1; r < grid.length; r++) {
       const row = grid[r]; if (!row) continue;
       const prod = txt(row[iProd]); if (!prod) continue;
       const d = data(row[iEm]); if (d && d.getUTCFullYear() !== ano) continue;
-      const m = iMes >= 0 && monthIdx(row[iMes]) >= 0 ? monthIdx(row[iMes]) : d ? d.getUTCMonth() : -1; if (m < 0) continue;
-      const q = num(row[iQ]) || 0, cu = num(row[iCU]) || 0;
-      linhas.push({ cliente: txt(row[iCli]), cod: txt(row[iCod]), prod, q, val: num(row[iVal]) || 0, mes: m, custo: iCT >= 0 && num(row[iCT]) != null ? num(row[iCT]) : q * cu, motivo: txt(row[iMot]).replace(/\s+/g, ' ').toUpperCase() || 'SEM MOTIVO INFORMADO' });
+      const m = iMes >= 0 && mesDe(row[iMes]) >= 0 ? mesDe(row[iMes]) : d ? d.getUTCMonth() : -1; if (m < 0) continue;
+      const q = numBR(row[iQ]) || 0, cu = numBR(row[iCU]) || 0;
+      linhas.push({ cliente: txt(row[iCli]), cod: txt(row[iCod]), prod, q, val: num(row[iVal]) || 0, mes: m, custo: iCT >= 0 && numBR(row[iCT]) != null ? numBR(row[iCT]) : q * cu, motivo: txt(row[iMot]).replace(/\s+/g, ' ').toUpperCase() || 'SEM MOTIVO INFORMADO' });
     }
     return linhas.length ? { linhas } : null;
   }
@@ -1844,13 +1845,154 @@ const NarrDados = (() => {
     return linhas.length ? { periodo, empresa, anoAtual: +txt(h[anos[0]]), anoAnt: +txt(h[anos[1]]), linhas } : null;
   }
 
+
+  // ================================================================ RELATÓRIOS PRÓPRIOS (têm prioridade sobre as abas do DFC)
+  // mês em qualquer formato: "JAN", "Jan/26", "Out-26", data do Excel
+  function mesDe(v) {
+    const mi = monthIdx(v); if (mi >= 0) return mi;
+    const t = norm(v), m = /^([a-z]{3})\b/.exec(t); if (m) { const k = monthIdx(m[1]); if (k >= 0) return k; }
+    const d = data(v); return d ? d.getUTCMonth() : -1;
+  }
+  // número em texto no formato brasileiro ("1.234,56") ou americano
+  const numBR = v => { if (isNum(v)) return v; const t = txt(v).replace(/[R$\s]/g, ''); if (!t || !/^-?[\d.,]+$/.test(t)) return null; const x = /,\d{1,2}$/.test(t) ? t.replace(/\./g, '').replace(',', '.') : t.replace(/,/g, ''); const n = +x; return isNaN(n) ? null : n; };
+  const linhaCab = (grid, testes, ate = 12) => { for (let r = 0; r < Math.min(grid.length, ate); r++) { const row = (grid[r] || []).map(norm); if (testes.every(re => row.some(v => re.test(v)))) return r; } return -1; };
+  const colDe = (h, re) => h.findIndex(v => re.test(norm(v)));
+
+  // ---------------------------------------------------------------- vendas por representante (aba Vendas Mês)
+  function vendasMes(grid) {
+    let hr = -1; for (let r = 0; r < 10; r++) if ((grid[r] || []).filter(v => norm(v) === 'meta').length >= 6) { hr = r; break; }
+    if (hr < 1) return null;
+    const h = grid[hr], mr = grid[hr - 1] || [];
+    const rel = (c, re) => { for (let k = c; k < c + 6; k++) if (re.test(norm(h[k]))) return k; return -1; };
+    const blocos = []; h.forEach((v, c) => { if (norm(v) !== 'meta') return; const m = mesDe(mr[c]); if (m >= 0) blocos.push({ m, meta: c, real: rel(c, /^realizado/), dev: rel(c, /^devoluc/), liq: rel(c, /^venda liquida/) }); });
+    const iNome = colDe(h, /^nome/), iEmp = colDe(h, /^empresa/), iReg = colDe(h, /^regiao/), iMac = colDe(h, /^macro/);
+    const reps = [];
+    for (let r = hr + 1; r < grid.length; r++) {
+      const row = grid[r]; if (!row) continue;
+      const emp = txt(row[iEmp]), nome = txt(row[iNome]) || emp; if (!nome) continue;
+      if (/^total/.test(norm(nome)) || /^total/.test(norm(emp))) break;
+      const z = () => zeros(12), o = { nome, empresa: emp, regiao: txt(row[iReg]), macro: txt(row[iMac]), meta: z(), real: z(), dev: z(), liq: z() };
+      blocos.forEach(b => { o.meta[b.m] = numBR(row[b.meta]) || 0; o.real[b.m] = numBR(row[b.real]) || 0; o.dev[b.m] = b.dev >= 0 ? numBR(row[b.dev]) || 0 : 0; o.liq[b.m] = b.liq >= 0 ? numBR(row[b.liq]) || 0 : o.real[b.m] - o.dev[b.m]; });
+      reps.push(o);
+    }
+    const real = zeros(12); reps.forEach(x => x.real.forEach((v, i) => real[i] += v));
+    const ult = real.reduce((a, v, i) => v ? i : a, -1);
+    return reps.length && ult >= 0 ? { reps, ult } : null;
+  }
+  // ---------------------------------------------------------------- premiação do trimestre (aba Premiação Trimestre)
+  function premiacao(grid) {
+    let hr = -1; for (let r = 0; r < 10; r++) if ((grid[r] || []).filter(v => norm(v) === 'meta').length >= 3) { hr = r; break; }
+    if (hr < 1) return null;
+    const h = grid[hr], tr = grid[hr - 1] || [];
+    const rel = (c, re) => { for (let k = c; k < c + 6; k++) if (re.test(norm(h[k]))) return k; return -1; };
+    const blocos = []; h.forEach((v, c) => { if (norm(v) !== 'meta') return; let q = -1; for (let k = c; k >= Math.max(0, c - 1); k--) { const m = /([1-4])\s*tri/.exec(norm(tr[k])); if (m) { q = +m[1] - 1; break; } } if (q >= 0) blocos.push({ q, meta: c, real: rel(c, /^realizado/), pct: rel(c, /atingido/), pp: rel(c, /^premio$/), pr: rel(c, /^premio r/) }); });
+    const iNome = colDe(h, /^nome/), iRep = colDe(h, /^representante/), iReg = colDe(h, /^regiao/);
+    const reps = [];
+    for (let r = hr + 1; r < grid.length; r++) {
+      const row = grid[r]; if (!row) continue;
+      const emp = txt(row[iRep]), nome = txt(row[iNome]) || emp; if (!nome) continue;
+      if (/^total/.test(norm(nome)) || /^total/.test(norm(emp))) break;
+      const o = { nome, empresa: emp, regiao: txt(row[iReg]), tri: [] };
+      blocos.forEach(b => { o.tri[b.q] = { meta: numBR(row[b.meta]) || 0, real: numBR(row[b.real]) || 0, pp: numBR(row[b.pp]), pr: numBR(row[b.pr]) || 0 }; });
+      reps.push(o);
+    }
+    return reps.length ? { reps, tris: blocos.map(b => b.q) } : null;
+  }
+
+  // ---------------------------------------------------------------- faturamento por produto (aba Base: mês, código, descrição, qtde, valor, tipo)
+  function produtosBase(grid, ref) {
+    const hr = linhaCab(grid, [/^codigo produto/, /^valor faturado/]); if (hr < 0) return null;
+    const h = grid[hr], iM = colDe(h, /^mes$/), iC = colDe(h, /^codigo produto/), iD = colDe(h, /^descricao/), iQ = colDe(h, /^qtde/), iV = colDe(h, /^valor faturado/), iT = colDe(h, /^tipo$/);
+    const L = [];
+    for (let r = hr + 1; r < grid.length; r++) { const row = grid[r]; if (!row) continue; const cod = txt(row[iC]), m = mesDe(row[iM]); if (!cod || m < 0) continue; const val = numBR(row[iV]) || 0, qtd = numBR(row[iQ]) || 0; if (!val && !qtd) continue; L.push({ mes: m, cod, desc: txt(row[iD]).replace(/\s*-\s*$/, ''), qtd, val, tipo: iT >= 0 ? txt(row[iT]) || 'OUTROS' : 'OUTROS' }); }
+    if (!L.length) return null;
+    const soma = arr => { const g = {}; arr.forEach(x => { const k = x.cod; if (!g[k]) g[k] = { cod: x.cod, desc: x.desc, tipo: x.tipo, qtd: 0, val: 0 }; g[k].qtd += x.qtd; g[k].val += x.val; }); return Object.values(g).sort((a, b) => b.val - a.val); };
+    const porMes = {}; L.forEach(x => (porMes[x.mes] = porMes[x.mes] || []).push(x));
+    const meses = Object.keys(porMes).map(Number).sort((a, b) => a - b);
+    Object.keys(porMes).forEach(m => porMes[m] = soma(porMes[m]));
+    const ateRef = meses.filter(m => m <= ref), mm = ateRef.length ? ateRef[ateRef.length - 1] : meses[meses.length - 1];
+    return { base: true, doMes: porMes[ref] || [], porMes, meses, mesDoMes: mm, ini: meses[0], fim: mm, acum: soma(L.filter(x => x.mes <= mm)) };
+  }
+
+  // ---------------------------------------------------------------- faturamento por cliente (aba Por Nome: nome já somado)
+  function clientesPorNome(grid) {
+    const hr = linhaCab(grid, [/^nome$/, /^valor/]); if (hr < 0) return null;
+    const h = grid[hr], iN = colDe(h, /^nome$/), iV = colDe(h, /^valor/);
+    const lista = [];
+    for (let r = hr + 1; r < grid.length; r++) { const row = grid[r]; if (!row) continue; const nome = txt(row[iN]); if (!nome) continue; if (/^total/.test(norm(nome))) break; const v = numBR(row[iV]); if (v == null) continue; lista.push({ nome: nome.replace(/\s+/g, ' '), v, mes: null }); }
+    if (!lista.length) return null;
+    // período no título: "(Jan a Out/2026)"
+    let fim = -1; for (const row of grid.slice(0, hr)) { const m = /\ba\s+([a-z]{3})\w*\s*\/?\s*20\d{2}/.exec(norm((row || []).join(' '))); if (m) { fim = monthIdx(m[1]); break; } }
+    return { lista: lista.sort((a, b) => b.v - a.v), porNome: true, fim };
+  }
+
+  // ---------------------------------------------------------------- prazo médio de recebimento (aba Base: mês, condição, prazo, valor)
+  function prazoBase(grid) {
+    const hr = linhaCab(grid, [/^condicao/, /^prazo/, /^valor/]); if (hr < 0) return null;
+    const h = grid[hr], iM = colDe(h, /^mes$/), iCod = colDe(h, /^cod/), iC = colDe(h, /^condicao/), iP = colDe(h, /^prazo/), iV = colDe(h, /^valor liquido|^valor$/) >= 0 ? colDe(h, /^valor liquido|^valor$/) : colDe(h, /^valor/);
+    const L = [];
+    for (let r = hr + 1; r < grid.length; r++) { const row = grid[r]; if (!row) continue; const m = mesDe(row[iM]), cond = txt(row[iC]), v = numBR(row[iV]); if (m < 0 || !cond || v == null) continue; L.push({ mes: m, cod: txt(row[iCod]), cond, prazo: numBR(row[iP]) || 0, v }); }
+    return L.length ? { linhas: L } : null;
+  }
+
+  // ---------------------------------------------------------------- estoque (aba Base: posição de cada mês por item + Base Terceiros)
+  function estoqueBase(grid) {
+    const hr = linhaCab(grid, [/^categoria/, /^familia/, /^vlr/]); if (hr < 0) return null;
+    const h = grid[hr], ix = re => colDe(h, re);
+    const iM = ix(/^mes$/), iCat = ix(/^categoria/), iO = ix(/^origem/), iF = ix(/^familia/), iC = ix(/^cod/), iD = ix(/^descricao/), iU = ix(/^um$/), iQ = ix(/^qtd/), iV = ix(/^vlr/);
+    const L = [];
+    for (let r = hr + 1; r < grid.length; r++) { const row = grid[r]; if (!row) continue; const m = mesDe(row[iM]); if (m < 0) continue; L.push({ mes: m, cat: txt(row[iCat]), origem: txt(row[iO]), fam: txt(row[iF]), cod: txt(row[iC]), desc: txt(row[iD]), um: txt(row[iU]), q: numBR(row[iQ]) || 0, v: numBR(row[iV]) || 0 }); }
+    return L.length ? { linhas: L } : null;
+  }
+  function estoqueTerceiros(grid) {
+    const h = grid[0] || [], iM = colDe(h, /^mes$/), iS = colDe(h, /^saldo atual/); if (iM < 0 || iS < 0) return null;
+    const saldo = zeros(12), itens = zeros(12), tem = Array(12).fill(false);
+    const iM2 = h.findIndex((v, c) => c > iS && /^mes$/.test(norm(v)));
+    for (let r = 1; r < grid.length; r++) { const row = grid[r]; if (!row) continue; const m = mesDe(row[iM]); if (m >= 0 && numBR(row[iS]) != null) { saldo[m] = numBR(row[iS]); tem[m] = true; } if (iM2 >= 0) { const m2 = mesDe(row[iM2]); if (m2 >= 0) itens[m2]++; } }
+    return tem.some(Boolean) ? { saldo, itens, tem } : null;
+  }
+
+  // ---------------------------------------------------------------- balanço perguntado (aba Indicadores)
+  function balanco(grid) {
+    const cabs = []; grid.forEach((row, r) => { if (row && row.some(v => /^balanco patrimonial/.test(norm(v)))) cabs.push(r); });
+    if (!cabs.length) return null;
+    const hrow = grid[cabs[0]], cols = [];
+    hrow.forEach((v, c) => { const d = data(v); if (d && isNum(v)) cols.push({ c, m: d.getUTCMonth(), ano: d.getUTCFullYear() }); });
+    if (!cols.length) return null;
+    const lerBloco = (r0, r1) => { const out = []; for (let r = r0 + 1; r < r1; r++) { const row = grid[r]; if (!row) continue; let nome = '', nivel = 0; for (let c = 0; c < cols[0].c; c++) { const t = txt(row[c]); if (t && !/^quanto|^checagem/i.test(t) && !isNum(row[c])) { nome = t; nivel = c; break; } } if (!nome) continue; if (/^(d\.?\s*r\.?\s*e|indices|analise)/.test(norm(nome))) break; out.push({ nome: nome.replace(/\s+/g, ' '), nivel, v: cols.map(k => numBR(row[k.c]) || 0), p: cols.map(k => numBR(row[k.c + 1])) }); } return out; };
+    const fimA = cabs[1] || grid.length, ativo = lerBloco(cabs[0], fimA);
+    let passivo = [], dif = null;
+    if (cabs[1] != null) { let r1 = cabs[1] + 1; while (r1 < grid.length && !(grid[r1] || []).some(v => /^(checagem|d\.?\s*r\.?\s*e)/.test(norm(v)) || /^diferenca entre/.test(norm(v)))) r1++; passivo = lerBloco(cabs[1], r1); const rd = grid.findIndex(row => row && row.some(v => /^diferenca entre ativo/.test(norm(v)))); if (rd >= 0) dif = cols.map(k => numBR(grid[rd][k.c]) || 0); }
+    const niveis = [...new Set(ativo.concat(passivo).map(x => x.nivel))].sort((a, b) => a - b); // coluna do rótulo → 0, 1, 2
+    ativo.concat(passivo).forEach(l => l.nivel = niveis.indexOf(l.nivel));
+    // mês preenchido = ativo circulante com valor
+    const ac = ativo.find(l => /^ativo circulante/.test(norm(l.nome))) || ativo[0];
+    const meses = cols.map((k, i) => ({ ...k, i })).filter(k => Math.abs(ac.v[k.i]) > 1);
+    return meses.length ? { cols, meses, ativo, passivo, dif } : null;
+  }
+
   // ---------------------------------------------------------------- junta tudo a partir das pastas abertas
+  const cache = new WeakMap();
+  const abrir = f => { if (!cache.has(f)) cache.set(f, KND.openWorkbook(f)); return cache.get(f); };
+  // relatório próprio = pasta sem as abas do DFC (DFC, DRE, Saldos)
+  async function ehApoio(f) { try { const wb = await abrir(f); return !wb.abas.some(a => /^(dfc|dre|saldos)$/.test(norm(a.nome))); } catch (e) { return false; } }
   async function extrair(files, ano, ref) {
     const E = { fontes: {} };
     const abas = [];
-    for (const f of files) { try { const wb = await KND.openWorkbook(f); wb.abas.forEach(a => abas.push({ arq: f.name, a })); } catch (e) { } }
+    for (const f of files) { try { const wb = await abrir(f); wb.abas.forEach(a => abas.push({ arq: f.name, a })); } catch (e) { } }
     const pega = async (re, filtro) => { const x = abas.find(o => re.test(norm(o.a.nome)) && (!filtro || filtro(o))); if (!x) return null; return { grid: await x.a.carregar(), fonte: `${x.arq} › ${x.a.nome}` }; };
-    const usa = async (chave, re, fn, filtro) => { const g = await pega(re, filtro); if (!g) return; try { const r = fn(g.grid); if (r) { E[chave] = r; E.fontes[chave] = g.fonte; } } catch (e) { console.warn(chave, e); } };
+    const usa = async (chave, re, fn, filtro) => { if (E[chave]) return; const g = await pega(re, filtro); if (!g) return; try { const r = fn(g.grid); if (r) { E[chave] = r; E.fontes[chave] = g.fonte; } } catch (e) { console.warn(chave, e); } };
+    const doArq = re => o => re.test(norm(o.arq));
+    // relatórios próprios primeiro; as abas do DFC ficam como reserva
+    await usa('vendas', /^vendas mes$/, vendasMes);
+    await usa('premiacao', /^premiacao/, premiacao);
+    await usa('produtos', /^base$/, g => produtosBase(g, ref), doArq(/produto/));
+    await usa('clientes', /^por nome$/, clientesPorNome);
+    await usa('bonif', /^base$/, g => bonificacao(g, ano), doArq(/bonific/));
+    await usa('prazo', /^base$/, prazoBase, doArq(/prazo/));
+    await usa('estoqueItens', /^base$/, estoqueBase, doArq(/estoque/));
+    await usa('terceiros', /^base terceiros$/, estoqueTerceiros);
+    await usa('balanco', /^indicadores$/, balanco);
     await usa('fat', /^faturamento$/, g => faturamento(g, ano));
     await usa('compras', /^compras$/, compras);
     await usa('estoque', /^estoque$/, estoque);
@@ -1870,7 +2012,7 @@ const NarrDados = (() => {
     }
     return E;
   }
-  return { extrair, data };
+  return { extrair, data, ehApoio };
 })();
 if (typeof module !== 'undefined') module.exports = NarrDados;
 </script>
@@ -2181,7 +2323,7 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
     const ss = slides(), imgs = [];
     try {
       for (let i = 0; i < ss.length; i++) { aviso(`Gerando o PowerPoint… slide ${i + 1} de ${ss.length}`); imgs.push(await slidePNG(ss[i], css)); }
-    } catch (err) { ST.imprimir = false; rerenderKeep(); t.classList.remove('on'); return alert(err.message); }
+    } catch (err) { ST.imprimir = false; rerenderKeep(); t.classList.remove('on'); return alert(/insecure|security|tainted/i.test(String(err && (err.name + err.message))) || /^((?!chrome|android).)*safari/i.test(navigator.userAgent) ? 'O Safari não permite gerar o PowerPoint por aqui. Abra esta mesma página no Google Chrome (ou Edge) e clique de novo em Baixar PowerPoint. O PDF e o Excel funcionam normalmente no Safari.' : err.message); }
     ST.imprimir = false; rerenderKeep();
     const CX = 12192000, CY = 6858000, enc = new TextEncoder(), X = s2 => enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + s2);
     const nsP = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
@@ -2290,15 +2432,18 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
       cs.push(card(`Faturamento ${periodo()}`, fmtC(ra), `${ant ? fmtP(pct(ra, ant)) + ` vs ${MES3[0]}–${MES3[r]}/${ano() - 1} · ` : ''}${fmtP(pct(ra, oa))} vs orçado`));
       cs.push(card(`Faturamento ${MESES[r].toLowerCase()}`, fmtR(e.fat.real[r]), `Orçado ${fmtR(e.fat.orc[r])} (${fmtP(pct(e.fat.real[r], e.fat.orc[r]))})`));
     }
+    if (e.vendas) { const v = e.vendas, mv = v.ult, sm = k => v.reps.reduce((a, x) => a + x[k][mv], 0), cm = v.reps.filter(x => x.meta[mv] > 0), na = cm.filter(x => x.liq[mv] >= x.meta[mv]).length; const p = e.premiacao, q = Math.floor(mv / 3), pr = p ? p.reps.reduce((a, x) => a + (x.tri[q] ? x.tri[q].pr : 0), 0) : null; cs.push(card(`Vendas × meta ${MESES[mv].toLowerCase()}`, fmtPc(sm('liq') / sm('meta')), `${na} de ${cm.length} representantes na meta${pr != null ? ` · prêmio ${q + 1}º tri até agora ${fmtR(pr)}` : ''}`, sm('liq') >= sm('meta') ? 'pos' : 'neg')); }
+    else cs.push(card('Vendas × meta', '—', 'Pendente: acompanhamento de vendas', 'pendc'));
     if (e.fat && m.caixa) { const rec = ytd(m.caixa.n1.ENT.y[ano()]), d = rec - ytd(e.fat.real); cs.push(card('Recebimento × faturamento', sinal(d), `Recebido ${fmtC(rec)} × faturado ${fmtC(ytd(e.fat.real))}${d < 0 ? ' · contas a receber aumentou' : ''}`, d < 0 ? 'neg' : 'pos')); }
+    if (e.prazo) { const Z = e.prazo.linhas, mz = Math.max(...Z.filter(x => x.mes <= r).map(x => x.mes)); cs.push(card('Prazo médio de recebimento', `${dias(prazoDe(Z.filter(x => x.mes <= mz)).pm)} dias`, `Acumulado do ano · ${MESES[mz].toLowerCase()}: ${dias(prazoDe(Z.filter(x => x.mes === mz)).pm)} dias`)); }
+    else cs.push(card('Prazo médio de recebimento', '—', 'Pendente: relatório de prazo médio', 'pendc'));
     if (e.inad) { const t = e.inad.titulos, tot = t.reduce((a, x) => a + x.val, 0), f12 = fat12(); cs.push(card('Inadimplência', f12 ? fmtPc(tot / f12) : fmtC(tot), `${fmtR(tot)} vencidos em ${fmtD(e.inad.base)} · ${fmtPc(t.filter(x => x.dias > 90).reduce((a, x) => a + x.val, 0) / tot)} há mais de 90 dias`, 'neg')); }
     if (e.compras && e.fat) cs.push(card('Compras s/ faturamento', fmtPc(ytd(e.compras.total) / ytd(e.fat.real)), `Compras ${fmtC(ytd(e.compras.total))} × faturamento ${fmtC(ytd(e.fat.real))} no acumulado`));
-    if (e.estoque) { const t = e.estoque.total, d = t[r] - (r ? t[r - 1] : 0); cs.push(card(`Estoque ${MES3[r].toLowerCase()}/${String(ano()).slice(2)}`, fmtC(t[r]), `${sinal(d)} no mês (${fmtP(r ? pct(t[r], t[r - 1]) : null)})`)); }
+    if (e.estoqueItens) { const EI = e.estoqueItens.linhas, te = e.terceiros, me = Math.max(...EI.filter(x => x.mes <= r).map(x => x.mes)), tot = m2 => EI.filter(x => x.mes === m2).reduce((a, x) => a + x.v, 0) + (te && te.tem[m2] ? te.saldo[m2] : 0), d = tot(me) - tot(me - 1); cs.push(card(`Estoque ${MES3[me].toLowerCase()}/${String(ano()).slice(2)}`, fmtC(tot(me)), `${sinal(d)} no mês (${fmtP(pct(tot(me), tot(me - 1)))}) · ${EI.filter(x => x.mes === me).length + (te ? te.itens[me] : 0)} itens`)); }
+    else if (e.estoque) { const t = e.estoque.total, d = t[r] - (r ? t[r - 1] : 0); cs.push(card(`Estoque ${MES3[r].toLowerCase()}/${String(ano()).slice(2)}`, fmtC(t[r]), `${sinal(d)} no mês (${fmtP(r ? pct(t[r], t[r - 1]) : null)})`)); }
     if (m.bancos) { const b = m.bancos.total; cs.push(card(`Saldo bancário ${MESES[r].toLowerCase()}`, fmtR(b.fim[r]), `${sinal(b.fim[r] - b.ini[r])} no mês · início do ano ${fmtC(b.ini[0])}`)); }
-    if (e.bonif) { const c2 = e.bonif.linhas.filter(l => l.mes <= r).reduce((a, l) => a + l.custo, 0); cs.push(card('Bonificação (custo)', fmtC(c2), e.fat ? `${fmtPc(c2 / ytd(e.fat.real))} do faturamento` : '')); }
+    if (e.bonif) { const B = e.bonif.linhas.filter(l => l.mes <= r), c2 = B.reduce((a, l) => a + l.custo, 0); cs.push(card(`Bonificação ${MES3[0]}–${MES3[r]}`, fmtR(c2), `${fmtQ(B.reduce((a, l) => a + l.q, 0))} unidades a preço de custo${e.fat ? ` · ${fmtPc(c2 / ytd(e.fat.real))} do faturamento` : ''}`)); }
     const dr = dreMedias(); if (dr) { cs.push(card('Margem de contribuição', fmtPc(dr.mc), `Média dos meses com DRE completa`)); cs.push(card('Ponto de equilíbrio', fmtC(dr.pe), `Faturamento mensal para cobrir as fixas`)); }
-    if (!e.prazo) cs.push(card('Prazo médio de recebimento', '—', 'Pendente: relatório de prazo médio', 'pendc'));
-    if (!e.vendas) cs.push(card('Vendas × meta', '—', 'Pendente: acompanhamento de vendas', 'pendc'));
     return slide('resumo', 'Abertura', `Resumo geral — ${periodo()}`, `<div class="ngrid">${cs.join('')}</div>${leitura('resumo-l', 'Manchete do período', manchete(), 'info', 'RESUMO')}`, { sub: 'Principais números do período · detalhes nos slides seguintes' });
   }
   function manchete() {
@@ -2347,46 +2492,94 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
     return slide('fat-hist', 'Faturamento', `Faturamento mensal por ano — ${anos[0]} a ${ano()}`, legenda(ss) + linhas(ss, { w: 1040, h: 250 }) + tb,
       { sub: `Valores em R$ · ${ano()} até ${MESES[ref()].toLowerCase()} · última coluna = acumulado ${MES3[0]}–${MES3[ref()]} de cada ano`, fonte: esc(E().fontes.fat) });
   }
+  // ------------------------------------------------------------------ VENDAS POR REPRESENTANTE E PREMIAÇÃO (Acompanhamento Vendas)
+  const pc1 = p => p == null ? '–' : KND.nf1.format(p * 100) + '%';
+  const tracoR = v => Math.abs(v) < 0.5 ? '-' : fmtR(v), tracoN = v => Math.abs(v) < 0.5 ? '-' : fmtQ(v);
+  const dias = v => v == null || isNaN(v) ? '–' : KND.nf1.format(v);
   function sVendasRep() {
-    return slide('vendas-rep', 'Comercial', `Vendas por representante e premiação — ${mesTxt()}`, pendente('Meta × realizado por representante no mês e a premiação do trimestre (quem está na meta, prêmio apurado, quanto falta para a meta do trimestre).', 'Acompanhamento Vendas (abas Vendas Mês e Premiação Trimestre)'), { sub: 'Meta × realizado do mês e do trimestre' });
+    const v = E().vendas;
+    if (!v) return slide('vendas-rep', 'Comercial', `Vendas por representante — ${mesTxt()}`, pendente('Meta × realizado por representante no último mês preenchido: quem está na meta, devoluções e venda líquida.', 'Acompanhamento Vendas (aba Vendas Mês)'), { sub: 'Meta × realizado do mês' });
+    const m = v.ult, L = v.reps.filter(x => x.meta[m] > 0 || Math.abs(x.real[m]) > 0.5 || Math.abs(x.liq[m]) > 0.5).sort((a, b) => b.liq[m] - a.liq[m] || b.meta[m] - a.meta[m]);
+    const t = k => L.reduce((a, x) => a + x[k][m], 0), meta = t('meta'), real = t('real'), dev = t('dev'), liq = t('liq');
+    const comMeta = L.filter(x => x.meta[m] > 0), naMeta = comMeta.filter(x => x.liq[m] >= x.meta[m]), semMeta = L.filter(x => !(x.meta[m] > 0));
+    const linha = x => { const p = x.meta[m] > 0 ? x.liq[m] / x.meta[m] : null; return `<tr><td>${tr(x.nome, 170)}</td><td class="tl">${esc(x.regiao)}</td><td>${tracoN(x.meta[m])}</td><td>${fmtQ(x.real[m])}</td><td>${tracoN(x.dev[m])}</td><td><b>${fmtQ(x.liq[m])}</b></td><td class="${p == null ? '' : p >= 1 ? 'vp' : 'vn'}">${p == null ? 'sem meta' : pc1(p)}</td></tr>`; };
+    const tab = `<table class="tb compact mini-t"><thead><tr><th class="l">Representante</th><th class="l">Região</th><th>Meta</th><th>Realizado</th><th>Devolução</th><th>Venda líquida</th><th>% atingido</th></tr></thead><tbody>${L.map(linha).join('')}<tr class="tot"><td>Total</td><td></td><td>${fmtQ(meta)}</td><td>${fmtQ(real)}</td><td>${tracoN(dev)}</td><td>${fmtQ(liq)}</td><td>${pc1(meta ? liq / meta : null)}</td></tr></tbody></table>`;
+    const d = liq - meta, lider = L[0];
+    const cards = card(`Venda líquida ${MESES[m].toLowerCase()}`, fmtR(liq), `Meta ${fmtR(meta)}`) +
+      card('Meta atingida', pc1(meta ? liq / meta : null), `${d >= 0 ? '+' : ''}${fmtR(d)} ${d >= 0 ? 'acima' : 'abaixo'} da meta`, d >= 0 ? 'pos' : 'neg') +
+      card('Representantes na meta', `${naMeta.length} de ${comMeta.length}`, `${comMeta.length - naMeta.length} abaixo da meta${semMeta.length ? ` · ${semMeta.length} sem meta` : ''}`) +
+      leitura('vend-l', 'Leitura', `${esc(lider.nome)} lidera o mês com ${fmtC(lider.liq[m])}${lider.meta[m] > 0 ? ` (${pc1(lider.liq[m] / lider.meta[m])} da meta)` : ''}. ${naMeta.length} de ${comMeta.length} representantes bateram a meta.`, 'info');
+    return slide('vendas-rep', 'Comercial', `Vendas por representante — ${MESES[m].toLowerCase()}/${ano()}`, nar(tab, cards),
+      { sub: `Meta × realizado do mês · ordenado pela venda líquida${m !== ref() ? ` · ⚠ último mês preenchido na planilha: ${MESES[m].toLowerCase()}` : ''}`, fonte: `${esc(E().fontes.vendas)} (${MESES[m].toLowerCase()}). Mostra quem tinha meta ou venda no mês. % atingido = venda líquida ÷ meta.` });
   }
-  // ------------------------------------------------------------------ PRODUTOS E CLIENTES
+  function sPremiacao() {
+    const p = E().premiacao; if (!p) return '';
+    const ult = E().vendas ? E().vendas.ult : ref(), q = Math.floor(ult / 3), ap = ult - q * 3 + 1, ritmo = ap / 3;
+    if (!p.tris.includes(q)) return '';
+    const L = p.reps.map(x => ({ ...x, t: x.tri[q] })).filter(x => x.t && (x.t.meta > 0 || Math.abs(x.t.real) > 0.5)).sort((a, b) => b.t.real - a.t.real || b.t.meta - a.t.meta);
+    const meta = L.reduce((a, x) => a + x.t.meta, 0), real = L.reduce((a, x) => a + x.t.real, 0), premio = L.reduce((a, x) => a + x.t.pr, 0), com = L.filter(x => x.t.pr > 0.5);
+    const f2 = v => new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+    const linha = x => { const pp = x.t.meta > 0 ? x.t.real / x.t.meta : null; return `<tr><td>${tr(x.nome, 170)}</td><td class="tl">${esc(x.regiao)}</td><td>${tracoN(x.t.meta)}</td><td>${fmtQ(x.t.real)}</td><td class="${pp == null ? '' : pp >= ritmo ? 'vp' : 'vn'}">${pp == null ? 'sem meta' : pc1(pp)}</td><td>${x.t.pp ? pc1(x.t.pp) : '-'}</td><td>${x.t.pr > 0.5 ? f2(x.t.pr) : '-'}</td></tr>`; };
+    const tab = `<table class="tb compact mini-t"><thead><tr><th class="l">Representante</th><th class="l">Região</th><th>Meta trimestre</th><th>Realizado</th><th>% atingido</th><th>Prêmio %</th><th>Prêmio R$</th></tr></thead><tbody>${L.map(linha).join('')}<tr class="tot"><td>Total</td><td></td><td>${fmtQ(meta)}</td><td>${fmtQ(real)}</td><td>${pc1(meta ? real / meta : null)}</td><td></td><td>${f2(premio)}</td></tr></tbody></table>`;
+    const mesesTri = [0, 1, 2].map(i => MESES[q * 3 + i].toLowerCase()).join(', ');
+    const cards = card(`Realizado no ${q + 1}º trimestre`, fmtR(real), `${pc1(meta ? real / meta : null)} da meta de ${fmtR(meta)}`) +
+      card('Prêmio apurado', fmtR(premio), `${com.length} representante${com.length === 1 ? '' : 's'} com prêmio${ap < 3 ? ' até agora' : ''}`) +
+      card(ap < 3 ? 'Trimestre em andamento' : 'Trimestre fechado', `${ap} de 3 meses`, meta > real ? `Faltam ${fmtR(meta - real)} para a meta do trimestre` : `Meta do trimestre superada em ${fmtR(real - meta)}`, meta > real ? '' : 'pos');
+    return slide('premiacao', 'Comercial', `Premiação de representantes — ${q + 1}º trimestre ${ano()}`, nar(tab, cards),
+      { sub: `Meta × realizado do trimestre (${mesesTri}) · ${ap} de 3 meses apurados`, fonte: `${esc(E().fontes.premiacao)} (${q + 1} TRI). Prêmio calculado pela planilha. Cor do % atingido: verde = no ritmo da meta (≥ ${pc1(ritmo)} com ${ap} de 3 meses).` });
+  }
+  // ------------------------------------------------------------------ PRODUTOS (3 slides: mês, acumulado por tipo, curva ABC)
   function sProdutos() {
     const p = E().produtos; if (!p) return '';
-    const fatTot = E().fat ? ytd(E().fat.real) : null;
-    const abas = [];
-    // mês: o da reunião, ou o último disponível na aba
-    let mm = ref(), lista = p.doMes;
+    const fonte = esc(E().fontes.produtos), bruto = p.base ? ' Valores brutos, antes de devoluções.' : '';
+    let h = '';
+    let mm = p.mesDoMes != null ? p.mesDoMes : ref(), lista = p.base ? p.porMes[mm] || [] : p.doMes;
     if (!lista.length && p.meses.length) { mm = p.meses[p.meses.length - 1]; lista = p.porMes[mm] || []; }
     if (lista.length) {
       const tot = lista.reduce((a, x) => a + x.val, 0), q = lista.reduce((a, x) => a + x.qtd, 0), top = lista[0];
-      const t = `<table class="tb compact"><thead><tr><th>Código</th><th class="l">Produto</th><th>Qtde</th><th>Valor</th><th>% mês</th></tr></thead><tbody>${lista.slice(0, 18).map(x => `<tr><td>${esc(x.cod)}</td><td>${tr(x.desc, 330)}</td><td>${fmtQ(x.qtd)}</td><td>${fmtR(x.val)}</td><td>${fmtPc(x.val / tot)}</td></tr>`).join('')}<tr class="tot"><td></td><td>Total (${lista.length} itens)</td><td>${fmtQ(q)}</td><td>${fmtR(tot)}</td><td>100%</td></tr></tbody></table>`;
-      abas.push({ nome: `Mês (${MES3[mm].toLowerCase()})`, corpo: nar(t, card(`Faturado em ${MESES[mm].toLowerCase()}`, fmtR(tot), mm !== ref() ? `⚠ a aba ainda não tem ${MESES[ref()].toLowerCase()}` : '') + card('Unidades faturadas', fmtQ(q), '') + card('Produto líder', fmtPc(top.val / tot), `${esc(top.desc)} · ${fmtR(top.val)}`)), sub: `Somente o mês · ordenado pelo valor faturado` });
+      const ant = p.porMes[mm - 1] || [], tA = ant.reduce((a, x) => a + x.val, 0), qA = ant.reduce((a, x) => a + x.qtd, 0);
+      const t = `<table class="tb compact mini-t"><thead><tr><th class="l">Código</th><th class="l">Descrição</th><th class="l">Tipo</th><th>Qtde</th><th>Valor (R$)</th><th>% mês</th></tr></thead><tbody>${lista.slice(0, 30).map(x => `<tr${x.val / tot >= 0.05 ? ' class="somb"' : ''}><td>${esc(x.cod)}</td><td>${tr(x.desc, 290)}</td><td>${esc(x.tipo || '–')}</td><td>${fmtQ(x.qtd)}</td><td>${fmtR(x.val)}</td><td>${pc1(x.val / tot)}</td></tr>`).join('')}${lista.length > 30 ? `<tr><td colspan="6" class="hint">+ ${lista.length - 30} produtos menores</td></tr>` : ''}<tr class="tot"><td>Total</td><td>${lista.length} produtos</td><td></td><td>${fmtQ(q)}</td><td>${fmtR(tot)}</td><td>100%</td></tr></tbody></table>`;
+      const vs = (a, b, f) => b ? `${fmtP(pct(a, b))} vs ${MES3[mm - 1].toLowerCase()} (${f(b)})` : '';
+      h += slide('prod-mes', 'Comercial', `Faturamento por produto — ${MESES[mm].toLowerCase()}/${ano()}`, nar(t,
+        card(`Faturado em ${MESES[mm].toLowerCase()}`, fmtR(tot), vs(tot, tA, fmtR) + (mm !== ref() ? ` · ⚠ a planilha ainda não tem ${MESES[ref()].toLowerCase()}` : ''), tA && tot < tA ? 'neg' : '') + card('Unidades faturadas', fmtQ(q), vs(q, qA, fmtQ)) +
+        card('Produto líder', pc1(top.val / tot), `${esc(top.desc)} · ${fmtR(top.val)}`) +
+        leitura('prod-l', 'Leitura', `${esc(top.desc)} responde por ${pc1(top.val / tot)} do faturamento do mês.`, 'info', 'PRODUTOS_CLIENTES')),
+        { sub: `Somente o mês de ${MESES[mm].toLowerCase()} · ordenado pelo valor faturado`, fonte: `${fonte}.${bruto} Sombreado: 5% ou mais do mês.` });
     }
     if (p.acum.length) {
-      const tot = p.acum.reduce((a, x) => a + x.val, 0);
-      const tipos = {}; p.acum.forEach(x => { const k = x.tipo || 'Outros'; tipos[k] = tipos[k] || { v: 0, q: 0 }; tipos[k].v += x.val; tipos[k].q += x.qtd; });
+      const tot = p.acum.reduce((a, x) => a + x.val, 0), per = p.base ? `${MES3[p.ini]}–${MES3[p.fim]}/${ano()}` : periodo();
+      const tipos = {}; p.acum.forEach(x => { const k = x.tipo || 'OUTROS'; tipos[k] = tipos[k] || { v: 0, q: 0 }; tipos[k].v += x.val; tipos[k].q += x.qtd; });
       const lt = Object.entries(tipos).sort((a, b) => b[1].v - a[1].v);
-      let acc = 0; const abc = p.acum.map(x => { acc += x.val; const c = acc / tot; return { ...x, cl: c <= 0.8 ? 'A' : c <= 0.95 ? 'B' : 'C', acc: c }; });
+      const graf = lt.length > 9 ? lt.slice(0, 8).map(([k, v]) => ({ rot: k, v: v.v })).concat([{ rot: `OUTROS (${lt.length - 8} tipos)`, v: lt.slice(8).reduce((a, x) => a + x[1].v, 0), cor: C.cinza }]) : lt.map(([k, v]) => ({ rot: k, v: v.v }));
+      const tTipo = `<table class="tb compact mini-t"><thead><tr><th class="l">Tipo</th><th>Quantidade</th><th>Valor (R$)</th><th>% part.</th></tr></thead><tbody>${lt.map(([k, v]) => `<tr${v.v / tot >= 0.05 ? ' class="somb"' : ''}><td>${esc(k)}</td><td>${fmtQ(v.q)}</td><td>${fmtR(v.v)}</td><td>${pc1(v.v / tot)}</td></tr>`).join('')}<tr class="tot"><td>Total</td><td>${fmtQ(lt.reduce((a, x) => a + x[1].q, 0))}</td><td>${fmtR(tot)}</td><td>100%</td></tr></tbody></table>`;
+      h += slide('prod-tipo', 'Comercial', `Faturamento acumulado ${ano()} por tipo de produto`, `<div class="duo">${barrasH(graf, { w: 540, padL: 160, rowH: 36 })}${tTipo}</div>`,
+        { sub: `Período ${per} · valor faturado, quantidade e participação de cada tipo`, fonte: `${fonte}, ${per}.${bruto}` });
+      let acc = 0; const abc = p.acum.map(x => { acc += x.val; const c = acc / tot; return { ...x, cl: c <= 0.8 ? 'A' : c <= 0.95 ? 'B' : 'C' }; });
+      const max = 40, vis = abc.slice(0, max), resto = abc.slice(max), meio = Math.ceil(vis.length / 2);
+      const tabABC = (arr, fim) => `<table class="tb compact mini-t"><thead><tr><th></th><th class="l">Código</th><th class="l">Descrição</th><th class="l">Tipo</th><th>Qtde</th><th>R$</th><th>%</th></tr></thead><tbody>${arr.map(x => `<tr${x.val / tot >= 0.05 ? ' class="somb"' : ''}><td><span class="abc ${x.cl}">${x.cl}</span></td><td>${esc(x.cod)}</td><td>${tr(x.desc, 135)}</td><td>${tr(x.tipo || '–', 78)}</td><td>${fmtQ(x.qtd)}</td><td>${fmtQ(x.val)}</td><td>${pc1(x.val / tot)}</td></tr>`).join('')}${fim ? `${resto.length ? `<tr><td></td><td colspan="6" class="hint">+ ${resto.length} produtos menores (${fmtR(resto.reduce((a, x) => a + x.val, 0))})</td></tr>` : ''}<tr class="tot"><td></td><td>Total</td><td>${abc.length} produtos</td><td></td><td>${fmtQ(abc.reduce((a, x) => a + x.qtd, 0))}</td><td>${fmtQ(tot)}</td><td>100%</td></tr>` : ''}</tbody></table>`;
       const nA = abc.filter(x => x.cl === 'A').length;
-      const tTipo = `<table class="tb compact"><thead><tr><th class="l">Tipo</th><th>Qtde</th><th>Valor</th><th>%</th></tr></thead><tbody>${lt.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${fmtQ(v.q)}</td><td>${fmtR(v.v)}</td><td>${fmtPc(v.v / tot)}</td></tr>`).join('')}<tr class="tot"><td>Total</td><td>${fmtQ(lt.reduce((a, x) => a + x[1].q, 0))}</td><td>${fmtR(tot)}</td><td>100%</td></tr></tbody></table>`;
-      abas.push({ nome: 'Por tipo (acumulado)', corpo: `<div class="duo">${barrasH(lt.slice(0, 14).map(([k, v]) => ({ rot: k, v: v.v })), { w: 520 })}${tTipo}</div>`, sub: 'Valor faturado, quantidade e participação de cada tipo de produto' });
-      const tAbc = `<table class="tb compact"><thead><tr><th>Curva</th><th class="l">Produto</th><th>Qtde</th><th>Valor</th><th>%</th><th>% acum.</th></tr></thead><tbody>${abc.slice(0, 20).map(x => `<tr><td><span class="abc ${x.cl}">${x.cl}</span></td><td>${tr(x.desc, 360)}</td><td>${fmtQ(x.qtd)}</td><td>${fmtR(x.val)}</td><td>${fmtPc(x.val / tot)}</td><td>${fmtPc(x.acc)}</td></tr>`).join('')}</tbody></table>`;
-      abas.push({ nome: 'Curva ABC (acumulado)', corpo: nar(tAbc, card('Itens na curva A', `${nA} de ${abc.length}`, '80% do valor faturado') + card('Faturado na aba', fmtC(tot), fatTot ? `${fmtPc(tot / fatTot)} do faturamento do ano` : '')), sub: 'Ordenado pelo valor acumulado · A = até 80% do valor, B = até 95%, C = restante' });
+      h += slide('prod-abc', 'Comercial', `Faturamento acumulado ${ano()} por produto`, `<div class="duo">${tabABC(vis.slice(0, meio))}${tabABC(vis.slice(meio), true)}</div>`,
+        { sub: `Período ${per} · ordenado pelo valor acumulado (curva ABC: A = até 80% do valor, ${nA} de ${abc.length} produtos)`, fonte: `${fonte}, ${per}.${bruto} Sombreado: produtos com 5% ou mais do faturamento.` });
     }
-    if (!abas.length) return '';
-    return slideAbas('produtos', 'Comercial', 'Faturamento por produto', abas, { fonte: esc(E().fontes.produtos) });
+    return h;
   }
+  // ------------------------------------------------------------------ CLIENTES (acima de R$ 10 mil, em quantas páginas precisar)
   function sClientes() {
     const c = E().clientes; if (!c) return '';
-    const tot = c.lista.reduce((a, x) => a + x.v, 0), lim = 10000, acima = c.lista.filter(x => x.v > lim), top10 = c.lista.slice(0, 10).reduce((a, x) => a + x.v, 0);
-    const ultMes = Math.max(...c.lista.flatMap(x => x.mes.map((v, i) => v ? i : -1)));
-    const tab = (arr, ini) => `<table class="tb compact"><thead><tr><th>#</th><th class="l">Cliente</th><th>Faturado</th><th>%</th><th>% acum.</th></tr></thead><tbody>${arr.map((x, i) => { const acc = c.lista.slice(0, ini + i + 1).reduce((a, y) => a + y.v, 0); return `<tr><td>${ini + i + 1}</td><td>${tr(x.nome, 250)}</td><td>${fmtR(x.v)}</td><td>${fmtPc(x.v / tot)}</td><td>${fmtPc(acc / tot)}</td></tr>`; }).join('')}</tbody></table>`;
-    const corpo = `<div class="duo">${tab(c.lista.slice(0, 20), 0)}<div>${barrasH(c.lista.slice(0, 10).map(x => ({ rot: x.nome, v: x.v })), { w: 520, padL: 200, maxCh: 24 })}${card('Concentração', fmtPc(top10 / tot), `Os 10 maiores clientes · ${c.lista.length} clientes no período`)}${card(`Clientes acima de ${fmtC(lim)}`, `${acima.length} de ${c.lista.length}`, `Somam ${fmtR(acima.reduce((a, x) => a + x.v, 0))} = ${fmtPc(acima.reduce((a, x) => a + x.v, 0) / tot)} do total`)}</div></div>` +
-      (ultMes < ref() ? `<p class="pend-opr">⚠ A aba de clientes vai até ${MESES[ultMes].toLowerCase()}; ${MESES[ref()].toLowerCase()} ainda não está nela.</p>` : '') + leitura('cli-l', 'Leitura', `Os 10 maiores clientes respondem por ${fmtPc(top10 / tot)} do faturamento do período.`, 'info', 'PRODUTOS_CLIENTES');
-    return slide('clientes', 'Comercial', `Faturamento por cliente — ${MES3[0]}–${MES3[Math.min(ultMes, ref())]}/${ano()}`, corpo, { sub: 'Mesmo nome somado, independente do código · ordenado pelo valor faturado', fonte: `${esc(E().fontes.clientes)} (notas fiscais, valor líquido)` });
+    const tot = c.lista.reduce((a, x) => a + x.v, 0), lim = 10000;
+    let ultMes = c.porNome ? (c.fim >= 0 ? c.fim : ref()) : Math.max(...c.lista.flatMap(x => x.mes.map((v, i) => v ? i : -1)));
+    ultMes = Math.min(ultMes, 11);
+    let L = c.lista.filter(x => x.v > lim); const porLimite = L.length >= 10; if (!porLimite) L = c.lista.slice(0, 40);
+    const sL = L.reduce((a, x) => a + x.v, 0), POR = 26, pags = [];
+    for (let i = 0; i < L.length; i += POR * 2) pags.push(i);
+    const tab = ini => { const arr = L.slice(ini, ini + POR); if (!arr.length) return '<div></div>'; let acc = c.lista.slice(0, ini).reduce((a, x) => a + x.v, 0); return `<table class="tb compact mini-t"><thead><tr><th>#</th><th class="l">Cliente</th><th>Valor (R$)</th><th>% part.</th><th>% acum.</th></tr></thead><tbody>${arr.map((x, i) => { acc += x.v; return `<tr><td>${ini + i + 1}</td><td>${tr(x.nome, 230)}</td><td>${fmtR(x.v)}</td><td>${pc1(x.v / tot)}</td><td>${pc1(acc / tot)}</td></tr>`; }).join('')}</tbody></table>`; };
+    const per = `${MES3[0]}–${MES3[ultMes]}/${ano()}`;
+    const resumo = porLimite ? `${L.length} de ${c.lista.length} clientes faturaram acima de ${fmtR(lim)}, somando ${fmtR(sL)} = ${pc1(sL / tot)} do total de ${fmtR(tot)}.` : `Os ${L.length} maiores de ${c.lista.length} clientes somam ${fmtR(sL)} = ${pc1(sL / tot)} do total de ${fmtR(tot)}.`;
+    const aviso = ultMes < ref() ? ` ⚠ A planilha de clientes vai até ${MESES[ultMes].toLowerCase()}.` : '';
+    return pags.map((ini, k) => slide(`clientes-${k + 1}`, 'Comercial', `Faturamento por cliente — ${per}${pags.length > 1 ? ` (${k + 1}/${pags.length})` : ''}`, `<div class="duo">${tab(ini)}${tab(ini + POR)}</div>`,
+      { sub: `${porLimite ? `Clientes com faturamento acima de ${fmtR(lim)}` : `Os ${L.length} maiores clientes`} · mesmo nome somado, independente do código · ordenado por valor`, fonte: `${resumo}${aviso} ${esc(E().fontes.clientes)}.` })).join('');
   }
-  // ------------------------------------------------------------------ RECEBIMENTO, PRAZO, COMPRAS, ESTOQUE, BONIFICAÇÃO
+  // ------------------------------------------------------------------ RECEBIMENTO
   function recebimento() { const e = E(), m = M(); if (!e.fat || !m.caixa) return null; const rec = ytd(m.caixa.n1.ENT.y[ano()]), fat = ytd(e.fat.real); return { rec, fat, d: rec - fat, recM: m.caixa.n1.ENT.y[ano()][ref()], fatM: e.fat.real[ref()] }; }
   function sRecebimento() {
     const r = recebimento(); if (!r) return '';
@@ -2397,9 +2590,43 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
       card(`${MESES[ref()]}/${ano()}`, fmtP(pct(r.recM, r.fatM)), `Só o mês: recebido ${fmtR(r.recM)} × faturado ${fmtR(r.fatM)}`, r.recM >= r.fatM ? 'pos' : 'neg')),
       { sub: 'Acumulado do ano · recebimento (DFC) comparado ao faturamento', fonte: `Recebimento: ${esc(ST.fonte.caixa ? ST.fonte.caixa.arquivo + ' › ' + ST.fonte.caixa.aba : 'DFC')}; faturamento: ${esc(E().fontes.fat)}.` });
   }
-  function sPrazo() {
-    return slide('prazo', 'Caixa', `Prazo médio de recebimento — ${ano()}`, pendente('Prazo médio ponderado pelo valor faturado (mês a mês e acumulado), vendas a prazo × à vista e a composição por condição de pagamento.', 'relatório de Prazo Médio de Recebimento do ano'), { sub: 'Dias, ponderado pelo valor faturado' });
+  // ------------------------------------------------------------------ PRAZO MÉDIO DE RECEBIMENTO (3 slides: mês a mês, acumulado, mês)
+  const FAIXAS_PZ = [['À vista', p => p <= 0], ['Até 30 dias', p => p > 0 && p <= 30], ['31 a 60 dias', p => p > 30 && p <= 60], ['61 a 90 dias', p => p > 60 && p <= 90], ['Acima de 90 dias', p => p > 90]];
+  function prazoDe(L) {
+    const v = L.reduce((a, x) => a + x.v, 0), pm = v ? L.reduce((a, x) => a + x.v * x.prazo, 0) / v : null;
+    const conds = {}; L.forEach(x => { const k = x.cond; conds[k] = conds[k] || { cond: k, prazo: x.prazo, v: 0 }; conds[k].v += x.v; });
+    return { v, pm, faixas: FAIXAS_PZ.map(([n, f]) => ({ rot: n, v: L.filter(x => f(x.prazo)).reduce((a, x) => a + x.v, 0) })), aPrazo: v ? L.filter(x => x.prazo > 0).reduce((a, x) => a + x.v, 0) / v : null, acima60: v ? L.filter(x => x.prazo > 60).reduce((a, x) => a + x.v, 0) / v : null, conds: Object.values(conds).sort((a, b) => b.v - a.v) };
   }
+  function sPrazo() {
+    const z = E().prazo;
+    if (!z) return slide('prazo', 'Caixa', `Prazo médio de recebimento — ${ano()}`, pendente('Prazo médio ponderado pelo valor faturado (mês a mês e acumulado), vendas a prazo × à vista e a composição por condição de pagamento.', 'relatório de Prazo Médio de Recebimento do ano'), { sub: 'Dias, ponderado pelo valor faturado' });
+    const L = z.linhas, meses = [...new Set(L.map(x => x.mes))].sort((a, b) => a - b), ateRef = meses.filter(m => m <= ref()), mm = ateRef.length ? ateRef[ateRef.length - 1] : meses[meses.length - 1];
+    const mesesV = meses.filter(m => m <= mm), porMes = mesesV.map(m => ({ m, ...prazoDe(L.filter(x => x.mes === m)) }));
+    const acumAte = m => prazoDe(L.filter(x => x.mes <= m)), A = acumAte(mm), Mx = porMes[porMes.length - 1], ant = porMes[porMes.length - 2];
+    const fonte = esc(E().fontes.prazo), per = `${MES3[mesesV[0]]}–${MES3[mm]}/${ano()}`;
+    let h = '';
+    // 1) mês a mês
+    const barrasM = porMes.map(x => ({ rot: MES3[x.m], v: x.pm, cor: x.m === mm ? C.navy : C.azul, sub: `acum. ${dias(acumAte(x.m).pm)}`, subCor: '#5B6B7A' }));
+    const media = porMes.reduce((a, x) => a + x.pm, 0) / porMes.length, maior = porMes.reduce((a, x) => x.pm > a.pm ? x : a), menor = porMes.reduce((a, x) => x.pm < a.pm ? x : a);
+    const dM = ant ? Mx.pm - ant.pm : null;
+    h += slide('prazo-mensal', 'Caixa', `Prazo médio de recebimento mensal — ${ano()}`, nar(barras(barrasM, { w: 700, h: 320, bw: 46, sub: true, fmt: dias, rotPeq: true }),
+      card(`Prazo de ${MESES[mm].toLowerCase()}`, `${dias(Mx.pm)} dias`, ant ? `${dM > 0 ? '+' : ''}${dias(dM)} dias vs ${MES3[ant.m].toLowerCase()} (${dias(ant.pm)} dias)` : '', dM == null ? '' : dM <= 0 ? 'pos' : 'neg') +
+      card(`Acumulado ${per.replace('/' + ano(), '')}`, `${dias(A.pm)} dias`, `Média simples dos meses: ${dias(media)} dias`) +
+      card('Maior e menor prazo', `${dias(maior.pm)} / ${dias(menor.pm)}`, `Maior em ${MES3[maior.m].toLowerCase()}, menor em ${MES3[menor.m].toLowerCase()} (dias)`) +
+      leitura('prazo-l', 'Leitura', `O prazo médio de ${MESES[mm].toLowerCase()} foi de ${dias(Mx.pm)} dias, ${Mx.pm <= A.pm ? 'abaixo' : 'acima'} da média do ano (${dias(A.pm)} dias). ${pc1(A.acima60)} das vendas do ano foram acima de 60 dias.`, 'info')),
+      { sub: 'Dias, ponderado pelo valor faturado · colunas = prazo do mês · embaixo = acumulado no ano', fonte: `${fonte}. Prazo = Σ(valor × prazo) ÷ Σ valor.` });
+    // 2) e 3) acumulado e mês: faixas de prazo + condições de pagamento
+    const visao = (P, id, titulo, sub, quando) => {
+      const top = P.conds.slice(0, 11), resto = P.conds.slice(11), rv = resto.reduce((a, x) => a + x.v, 0), rp = rv ? resto.reduce((a, x) => a + x.v * x.prazo, 0) / rv : 0;
+      const tab = `<table class="tb compact mini-t"><thead><tr><th class="l">Condição de pagamento</th><th>Prazo</th><th>Valor (R$)</th><th>%</th></tr></thead><tbody>${top.map(x => `<tr><td>${esc(x.cond)}</td><td>${Math.round(x.prazo)}d</td><td>${fmtR(x.v)}</td><td>${pc1(x.v / P.v)}</td></tr>`).join('')}${resto.length ? `<tr><td>Demais ${resto.length} condições</td><td>${Math.round(rp)}d</td><td>${fmtR(rv)}</td><td>${pc1(rv / P.v)}</td></tr>` : ''}<tr class="tot"><td>Total / prazo médio</td><td>${dias(P.pm)}d</td><td>${fmtR(P.v)}</td><td>100%</td></tr></tbody></table>`;
+      return slide(id, 'Caixa', titulo, `<div class="ngrid c3">${card('Prazo médio', `${dias(P.pm)} <small>dias</small>`, 'ponderado pelo valor') + card('Vendas a prazo', pc1(P.aPrazo), `à vista: ${pc1(1 - P.aPrazo)}`) + card('Acima de 60 dias', pc1(P.acima60), `das vendas ${quando}`, P.acima60 > 0.5 ? 'neg' : '')}</div>` +
+        `<div class="duo">${barras(P.faixas.map((x, i) => ({ ...x, cor: [C.pos, C.claro, C.azul, C.navy, C.neg][i] })), { w: 560, h: 290, bw: 60, fmt: fmtK, rotPeq: true })}${tab}</div>`, { sub, fonte });
+    };
+    h += visao(A, 'prazo-acum', `Prazo médio de recebimento acumulado — ${per}`, 'Visão do ano: prazo médio ponderado e composição das vendas por prazo e por condição de pagamento', 'do ano');
+    h += visao(Mx, 'prazo-mes', `Prazo médio de recebimento — ${mesTxt(mm)}`, `Somente o mês de ${MESES[mm].toLowerCase()}: prazo médio ponderado e composição das vendas por prazo e por condição de pagamento`, 'do mês');
+    return h;
+  }
+  // ------------------------------------------------------------------ COMPRAS
   function sCompras() {
     const c = E().compras, f = E().fat; if (!c || !f) return '';
     const ca = ytd(c.total), fa = ytd(f.real), pp = ytd(c.produtos), sv = ytd(c.servicos);
@@ -2409,7 +2636,7 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
       card('Compras sobre faturamento', fmtPc(ca / fa), `A cada R$ 100 faturados, R$ ${Math.round(ca / fa * 100)} foram gastos em compras`)),
       { sub: 'Compras mês a mês · quanto as compras representam do faturamento no acumulado', fonte: esc(E().fontes.compras) });
   }
-  function sEstoque() {
+  function sEstoqueDFC() {
     const e = E().estoque; if (!e) return '';
     const r = ref(), cores = [C.navy, C.azul, C.claro, C.cinza, '#8FA3B5'];
     const sr = e.cats.map((c, i) => ({ name: c.nome, color: cores[i % cores.length], values: c.v.slice(0, r + 1) }));
@@ -2421,21 +2648,98 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
       (maior ? card('Maior salto do ano', sinal(maior.d), `${MESES[maior.i].toLowerCase()}: de ${fmtC(t[maior.i - 1])} para ${fmtC(t[maior.i])}`) : '') + leitura('est-l', 'Leitura', `Estoque de ${fmtC(t[r])} em ${MESES[r].toLowerCase()}, contra ${fmtC(t[0])} em janeiro.`, 'info', 'COMPRAS_ESTOQUE')),
       { sub: 'Posição do último dia de cada mês, por categoria (R$) · var. %: vermelho = estoque subiu', fonte: `${esc(E().fontes.estoque)}. Estoque por família (maiores itens) depende do relatório de estoque do mês.` });
   }
+  // ------------------------------------------------------------------ ESTOQUE (3 slides: posição do mês, evolução, por família)
+  function rosca(items, o = {}) {
+    const W = o.w || 260, R = W / 2 - 6, r = R * 0.6, cx = W / 2, cy = W / 2, tot = items.reduce((a, x) => a + Math.max(0, x.v), 0) || 1;
+    let a0 = -Math.PI / 2, s = `<svg class="chart" viewBox="0 0 ${W} ${W}" style="max-width:${W}px">`;
+    items.forEach(it => {
+      const f = Math.max(0, it.v) / tot; if (f <= 0) return; const a1 = a0 + f * 2 * Math.PI - (f < 1 ? 0.012 : 0.0001), lg = a1 - a0 > Math.PI ? 1 : 0;
+      const p = (ang, rr) => `${cx + rr * Math.cos(ang)},${cy + rr * Math.sin(ang)}`;
+      s += `<path d="M${p(a0, R)} A${R},${R} 0 ${lg} 1 ${p(a1, R)} L${p(a1, r)} A${r},${r} 0 ${lg} 0 ${p(a0, r)} Z" fill="${it.cor}" data-tip="${esc(it.rot)}: ${esc(fmtR(it.v))} (${pc1(f)})"/>`;
+      a0 = a1 + (f < 1 ? 0.012 : 0);
+    });
+    return s + `<text x="${cx}" y="${cy - 2}" text-anchor="middle" class="v">${esc(fmtK(tot))}</text><text x="${cx}" y="${cy + 15}" text-anchor="middle" class="x">total</text></svg>`;
+  }
+  const codCat = l => /^pa/i.test(l.origem) ? 'PAC' : l.origem;
+  const ordemCat = n => /semi/i.test(n) ? 1 : /acabad/i.test(n) ? 0 : /^mp|mat/i.test(n) ? 2 : 3;
+  function sEstoque() {
+    const ei = E().estoqueItens; if (!ei) return sEstoqueDFC();
+    const L = ei.linhas, te = E().terceiros, meses = [...new Set(L.map(x => x.mes))].sort((a, b) => a - b), ateRef = meses.filter(m => m <= ref()), mm = ateRef.length ? ateRef[ateRef.length - 1] : meses[meses.length - 1];
+    const cats = [...new Set(L.map(x => x.cat))].sort((a, b) => ordemCat(a) - ordemCat(b));
+    const valor = (cat, m) => L.filter(x => x.cat === cat && x.mes === m).reduce((a, x) => a + x.v, 0);
+    const terc = m => te && te.tem[m] ? te.saldo[m] : 0, CORES = [C.navy, C.azul, C.claro, '#8FA3B5'];
+    const serie = m => cats.reduce((a, c) => a + valor(c, m), 0) + terc(m);
+    const LM = L.filter(x => x.mes === mm), fonte = esc(E().fontes.estoqueItens) + (te ? ` + ${esc(E().fontes.terceiros)}` : '');
+    const linhasCat = cats.map((c, i) => { const it = LM.filter(x => x.cat === c); return { cat: c, cod: codCat(it[0] || { origem: '' }), q: it.reduce((a, x) => a + x.q, 0), v: it.reduce((a, x) => a + x.v, 0), cor: CORES[i % CORES.length] }; }).filter(x => x.v || x.q).sort((a, b) => b.v - a.v);
+    const tV = linhasCat.reduce((a, x) => a + x.v, 0), tQ = linhasCat.reduce((a, x) => a + x.q, 0), total = serie(mm), totAnt = mm > 0 && meses.includes(mm - 1) ? serie(mm - 1) : null;
+    const itens = LM.length + (te ? te.itens[mm] : 0);
+    const varias = cats.map(c => ({ n: c, d: valor(c, mm) - valor(c, mm - 1), a: valor(c, mm - 1) })).concat(te ? [{ n: 'Poder de terceiros', d: terc(mm) - terc(mm - 1), a: terc(mm - 1) }] : []).sort((a, b) => Math.abs(b.d) - Math.abs(a.d));
+    const vm = varias[0];
+    let h = '';
+    const tab = `<table class="tb compact"><thead><tr><th class="l">Estoque</th><th class="l">Categoria</th><th>Qtd. em estoque</th><th>Valor total (R$)</th><th>% do valor</th></tr></thead><tbody>${linhasCat.map(x => `<tr><td>${esc(x.cod)}</td><td class="tl">${esc(x.cat)}</td><td>${fmtQ(x.q)}</td><td>${fmtR(x.v)}</td><td>${pc1(x.v / tV)}</td></tr>`).join('')}<tr class="tot"><td>Total geral</td><td></td><td>${fmtQ(tQ)}</td><td>${fmtR(tV)}</td><td>100%</td></tr></tbody></table><p class="hint">Quantidades somam unidades de medida diferentes (UN, KG, MT…), como no relatório original.${linhasCat.some(x => x.cod === 'PAC') ? ' PAC inclui as origens PA, PA2 e PA3.' : ''}</p>`;
+    const donut = linhasCat.map(x => ({ rot: x.cat, v: x.v, cor: x.cor })).concat(te ? [{ rot: 'Poder de terceiros', v: terc(mm), cor: '#8FA3B5' }] : []);
+    h += slide('est-mes', 'Compras e estoque', `Estoque — posição de ${mesTxt(mm)}`, nar(tab + `<div class="duo" style="align-items:center">${rosca(donut, { w: 240 })}${legenda(donut.map(x => ({ nome: x.rot, cor: x.cor })))}</div>`,
+      card(`Estoque total${te ? ' (com terceiros)' : ''}`, fmtR(total), `${fmtQ(itens)} itens${totAnt ? ` · ${fmtP(pct(total, totAnt))} vs mês anterior (${sinal(total - totAnt)})` : ''}`) +
+      (vm && totAnt ? card('Maior variação no mês', sinal(vm.d), `${esc(vm.n)} (${fmtP(pct(vm.d + vm.a, vm.a))} vs mês anterior)`, vm.d > 0 ? 'neg' : 'pos') : '') +
+      (te ? card('Em poder de terceiros', fmtR(terc(mm)), `${te.itens[mm]} itens · ${pc1(terc(mm) / total)} do estoque · não entra na tabela ao lado`) : '')),
+      { sub: 'Quantidade e valor em estoque no último dia do mês, por categoria', fonte: `${fonte} (${MES3[mm]}/${String(ano()).slice(2)}).` });
+    // evolução
+    const ms = meses.filter(m => m <= mm), sr = cats.map((c, i) => ({ name: c, color: CORES[i % CORES.length], values: MES3.map((_, m) => ms.includes(m) ? valor(c, m) : 0).slice(0, mm + 1) }));
+    if (te) sr.push({ name: 'Poder de terceiros', color: '#8FA3B5', values: MES3.map((_, m) => terc(m)).slice(0, mm + 1) });
+    const tot = MES3.map((_, m) => m <= mm ? serie(m) : 0), med = a => ms.reduce((s, m) => s + a[m], 0) / ms.length;
+    const tEv = `<table class="tb compact mini-t"><thead><tr><th class="l">Estoque</th>${ms.map(m => `<th>${MES3[m]}</th>`).join('')}<th>Média</th></tr></thead><tbody>${sr.map(s => `<tr><td>${esc(s.name)}</td>${ms.map(m => `<td>${fmtK(s.values[m])}</td>`).join('')}<td>${fmtK(med(s.values))}</td></tr>`).join('')}<tr class="tot"><td>Total</td>${ms.map(m => `<td>${fmtK(tot[m])}</td>`).join('')}<td>${fmtK(med(tot))}</td></tr><tr><td>Var. % mês</td>${ms.map((m, i) => { const p = i ? pct(tot[m], tot[ms[i - 1]]) : null; return `<td class="${p > 0 ? 'vn' : p < 0 ? 'vp' : ''}">${p == null ? '' : fmtP(p)}</td>`; }).join('')}<td></td></tr></tbody></table>`;
+    const salto = ms.slice(1).map((m, i) => ({ m, d: tot[m] - tot[ms[i]] })).sort((a, b) => b.d - a.d)[0];
+    h += slide('est-evol', 'Compras e estoque', `Estoque — evolução mensal ${ano()}`, Charts.legenda(sr) + Charts.empilhado(sr, { w: 1040, h: 250, upTo: mm, fmt: fmtR, fmtAxis: fmtK, totais: fmtK }) + tEv +
+      leitura('est-l', 'Leitura', `Estoque de ${fmtC(tot[mm])} em ${MESES[mm].toLowerCase()}, contra ${fmtC(tot[ms[0]])} em ${MESES[ms[0]].toLowerCase()}${salto && salto.d > 0 ? `; o maior salto foi em ${MESES[salto.m].toLowerCase()} (${sinal(salto.d)})` : ''}.`, 'info', 'COMPRAS_ESTOQUE'),
+      { sub: `Posição do último dia de cada mês, por categoria (R$)${te ? ' · inclui estoque em poder de terceiros' : ''}`, fonte: `${fonte}. Var. %: vermelho = estoque subiu, verde = caiu.` });
+    // por família: maiores itens (mesmo código somado entre depósitos)
+    const fams = {}; LM.forEach(x => { const f = (x.fam || 'OUTROS').replace(/\d+$/, ''); (fams[f] = fams[f] || []).push(x); });
+    const blocos = Object.entries(fams).map(([f, arr]) => { const g = {}; arr.forEach(x => { g[x.cod] = g[x.cod] || { desc: x.desc, q: 0, v: 0 }; g[x.cod].q += x.q; g[x.cod].v += x.v; }); const it = Object.values(g).sort((a, b) => b.v - a.v); const cat = arr[0].cat; return { f, cat, it, v: it.reduce((a, x) => a + x.v, 0), q: it.reduce((a, x) => a + x.q, 0) }; }).sort((a, b) => ordemCat(a.cat) - ordemCat(b.cat) || b.v - a.v);
+    const N = 10, bloco = b => { const top = b.it.slice(0, N), r = b.it.slice(N); return `<div><h4 class="h4">${esc(b.f)} · ${esc(b.cat)} <small class="hint">${fmtR(b.v)} · ${b.it.length} itens</small></h4><table class="tb compact mini-t"><thead><tr><th class="l">Item</th><th>Qtd.</th><th>R$</th><th>%</th></tr></thead><tbody>${top.map(x => `<tr><td>${tr(x.desc, 150)}</td><td>${fmtQ(x.q)}</td><td>${fmtQ(x.v)}</td><td>${pc1(x.v / b.v)}</td></tr>`).join('')}${r.length ? `<tr><td>Demais ${r.length} itens</td><td>${fmtQ(r.reduce((a, x) => a + x.q, 0))}</td><td>${fmtQ(r.reduce((a, x) => a + x.v, 0))}</td><td>${pc1(r.reduce((a, x) => a + x.v, 0) / b.v)}</td></tr>` : ''}<tr class="tot"><td>Total ${esc(b.f)}</td><td>${fmtQ(b.q)}</td><td>${fmtQ(b.v)}</td><td>100%</td></tr></tbody></table></div>`; };
+    h += slide('est-fam', 'Compras e estoque', `Estoque por família — ${mesTxt(mm)}`, `<div class="fam3" style="grid-template-columns:repeat(${Math.min(blocos.length, 3)},minmax(0,1fr))">${blocos.slice(0, 3).map(bloco).join('')}</div>`,
+      { sub: `Maiores itens em valor de ${blocos.slice(0, 3).map(b => `${b.f} (${b.cat.toLowerCase()})`).join(', ')} · mesmo código somado entre depósitos`, fonte: `${fonte} (${MES3[mm]}/${String(ano()).slice(2)}). Quantidade na unidade de medida de cada item.` });
+    return h;
+  }
+  // ------------------------------------------------------------------ BONIFICAÇÃO (3 slides: quantidade, custo, motivo)
   function sBonif() {
     const b = E().bonif; if (!b) return '';
     const r = ref(), L = b.linhas.filter(l => l.mes <= r), ult = Math.max(...L.map(l => l.mes));
-    const fatA = E().fat ? sumTo(E().fat.real, Math.max(...b.linhas.filter(l => l.mes <= ref()).map(l => l.mes))) : null; // mesmo período da aba
     const grupo = (key, campo) => { const g = {}; L.forEach(l => { const k = l[key]; g[k] = g[k] || { v: zeros(12), t: 0 }; g[k].v[l.mes] += l[campo]; g[k].t += l[campo]; }); return Object.entries(g).sort((a, z) => z[1].t - a[1].t); };
-    const tabela = (lin, fmt, n = 22) => { const tot = zeros(12); lin.forEach(([, x]) => x.v.forEach((v, i) => tot[i] += v)); return `<table class="tb compact mini-t"><thead><tr><th></th>${MES3.slice(0, ult + 1).map(m => `<th>${m}</th>`).join('')}<th>Total</th></tr></thead><tbody>${lin.slice(0, n).map(([k, x]) => `<tr><td>${tr(k, 250)}</td>${x.v.slice(0, ult + 1).map(v => `<td>${v ? fmt(v) : ''}</td>`).join('')}<td><b>${fmt(x.t)}</b></td></tr>`).join('')}${lin.length > n ? `<tr><td colspan="${ult + 3}" class="hint">+ ${lin.length - n} linhas menores</td></tr>` : ''}<tr class="tot"><td>Total</td>${tot.slice(0, ult + 1).map(v => `<td>${fmt(v)}</td>`).join('')}<td>${fmt(tot.reduce((a, v) => a + v, 0))}</td></tr></tbody></table>`; };
-    const custoT = L.reduce((a, l) => a + l.custo, 0);
-    const per = `${MES3[0]}–${MES3[ult]}/${ano()}`, aviso = ult < r ? ` · ⚠ a aba vai até ${MESES[ult].toLowerCase()}` : '';
-    const abas = [
-      { nome: 'Custo por produto', corpo: tabela(grupo('prod', 'custo'), fmtK) + leitura('bon-l', 'Leitura', `Bonificações custaram ${fmtR(custoT)} no período${fatA ? `, ${fmtPc(custoT / fatA)} do faturamento` : ''}.`, 'info', 'BONIFICACAO'), sub: `Quantidade × custo unitário (R$) · ${per}${aviso}` },
-      { nome: 'Quantidade por produto', corpo: tabela(grupo('prod', 'q'), fmtQ), sub: `Unidades bonificadas por mês · ${per}${aviso}` },
-      { nome: 'Custo por motivo', corpo: tabela(grupo('motivo', 'custo'), fmtK), sub: `Custo agrupado pelo motivo informado na nota · ${per}${aviso}` },
-      { nome: 'Custo por cliente', corpo: tabela(grupo('cliente', 'custo'), fmtK), sub: `Quem mais recebeu bonificação (custo) · ${per}${aviso}` },
-    ];
-    return slideAbas('bonif', 'Comercial', 'Bonificação', abas, { fonte: esc(E().fontes.bonif) });
+    const fat = E().fat ? E().fat.real : null;
+    const tabela = (lin, fmt, n, rotulo, demaisTxt, extra = '') => {
+      const tot = zeros(12); lin.forEach(([, x]) => x.v.forEach((v, i) => tot[i] += v)); const T = tot.reduce((a, v) => a + v, 0);
+      if (lin.length === n + 1) n++; // "Demais 1" vira a própria linha
+      const vis = lin.slice(0, n), resto = lin.slice(n), rv = zeros(12); resto.forEach(([, x]) => x.v.forEach((v, i) => rv[i] += v));
+      const cel = v => `<td>${Math.abs(v) < 0.5 ? '-' : fmt(v)}</td>`;
+      return `<table class="tb compact mini-t"><thead><tr><th class="l">${rotulo}</th>${MES3.slice(0, ult + 1).map(m => `<th>${m}</th>`).join('')}<th>Total</th><th>%</th></tr></thead><tbody>${vis.map(([k, x]) => `<tr><td>${tr(k, 240)}</td>${x.v.slice(0, ult + 1).map(cel).join('')}<td><b>${fmt(x.t)}</b></td><td>${pc1(x.t / T)}</td></tr>`).join('')}${resto.length ? `<tr><td>Demais ${resto.length} ${demaisTxt}</td>${rv.slice(0, ult + 1).map(cel).join('')}<td><b>${fmt(rv.reduce((a, v) => a + v, 0))}</b></td><td>${pc1(rv.reduce((a, v) => a + v, 0) / T)}</td></tr>` : ''}<tr class="tot"><td>Total geral</td>${tot.slice(0, ult + 1).map(v => `<td>${fmt(v)}</td>`).join('')}<td>${fmt(T)}</td><td>100%</td></tr>${extra ? extra(tot, T) : ''}</tbody></table>`;
+    };
+    const per = `${MES3[0]}–${MES3[ult]}/${ano()}`, aviso = ult < r ? ` · ⚠ a planilha vai até ${MESES[ult].toLowerCase()}` : '', fonte = esc(E().fontes.bonif);
+    const prods = grupo('prod', 'custo'), qtd = grupo('prod', 'q'), mot = grupo('motivo', 'custo');
+    const custoT = L.reduce((a, l) => a + l.custo, 0), fatA = fat ? sumTo(fat, ult) : null;
+    const k = v => fmtQ(v / 1000) + 'k';
+    const linhaFat = fat ? (tot, T) => `<tr><td>Faturamento (DFC)</td>${fat.slice(0, ult + 1).map(v => `<td>${k(v)}</td>`).join('')}<td>${k(fatA)}</td><td></td></tr><tr><td>% s/ faturamento</td>${tot.slice(0, ult + 1).map((v, i) => `<td>${pc1(fat[i] ? v / fat[i] : null)}</td>`).join('')}<td><b>${pc1(fatA ? T / fatA : null)}</b></td><td></td></tr>` : '';
+    return slide('bon-qtd', 'Comercial', `Bonificação — quantidade por produto · ${per}`, tabela(qtd, fmtQ, 25, 'Produto', 'produtos'),
+      { sub: `Unidades bonificadas por mês · ordenado pelo total${aviso}`, fonte: `${fonte}. ${qtd.length} produtos bonificados.` }) +
+      slide('bon-custo', 'Comercial', `Bonificação — custo por produto · ${per}`, tabela(prods, fmtQ, 25, 'Produto', 'produtos', linhaFat) +
+        leitura('bon-l', 'Leitura', `Bonificações custaram ${fmtR(custoT)} no período${fatA ? `, ${pc1(custoT / fatA)} do faturamento` : ''}.`, 'info', 'BONIFICACAO'),
+        { sub: `Quantidade × custo unitário (R$) · ordenado pelo total${fat ? ' · % sobre o faturamento no rodapé da tabela' : ''}${aviso}`, fonte: `${fonte}${fat ? `; faturamento: ${esc(E().fontes.fat)}` : ''}.` }) +
+      slide('bon-motivo', 'Comercial', `Bonificação — custo por motivo · ${per}`, tabela(mot, fmtQ, 20, 'Motivo', 'motivos'),
+        { sub: `Custo das bonificações (R$) agrupado pelo motivo informado na nota · ordenado pelo total${aviso}`, fonte: `${fonte}. ${mot.length} motivos no total${mot.length > 20 ? '; os 20 maiores aparecem individualmente' : ''}.` });
+  }
+  // ------------------------------------------------------------------ BALANÇO PERGUNTADO (últimos 6 meses preenchidos)
+  function sBalanco() {
+    const b = E().balanco;
+    if (!b) return slide('balanco', 'Caixa', 'Balanço perguntado', pendente('Balanço patrimonial dos últimos meses (ativo, passivo e patrimônio líquido), em R$ e em % do total.', 'Balanço Perguntado do ano (aba Indicadores)'), { sub: 'Balanço patrimonial mês a mês' });
+    const ms = b.meses.filter(k => k.ano < ano() || k.m <= ref()).slice(-6), MS = ms.length ? ms : b.meses.slice(-6);
+    const rotM = k => `${MES3[k.m]}/${String(k.ano).slice(2)}`;
+    const visivel = l => l.nivel === 0 || MS.some(k => Math.abs(l.v[k.i]) > 0.5);
+    const cab = t => `<tr class="bh"><th class="l">${t}</th>${MS.map(k => `<th colspan="2">${rotM(k)}</th>`).join('')}</tr>`;
+    const lin = l => `<tr class="${l.nivel === 0 ? 'n1' : 'lv' + l.nivel}"><td>${esc(l.nivel === 0 ? l.nome.toUpperCase() : l.nome)}</td>${MS.map(k => `<td>${Math.abs(l.v[k.i]) < 0.5 ? '-' : fmtR(l.v[k.i])}</td><td class="av">${l.p[k.i] == null ? '' : KND.nf1.format(l.p[k.i] * 100) + '%'}</td>`).join('')}</tr>`;
+    const dif = b.dif ? `<tr class="tot"><td>Diferença entre ativo e passivo</td>${MS.map(k => `<td class="${Math.abs(b.dif[k.i]) > 1 ? 'vn' : ''}">${Math.abs(b.dif[k.i]) < 1 ? '-' : fmtR(b.dif[k.i])}</td><td></td>`).join('')}</tr>` : '';
+    const tab = `<table class="tb drill compact mini-t bal"><thead>${cab('Balanço patrimonial — ativo')}</thead><tbody>${b.ativo.filter(visivel).map(lin).join('')}</tbody><thead>${cab('Balanço patrimonial — passivo')}</thead><tbody>${b.passivo.filter(visivel).map(lin).join('')}${dif}</tbody></table>`;
+    const pre = b.meses;
+    return slide('balanco', 'Caixa', 'Balanço perguntado', tab,
+      { sub: `Balanço patrimonial de ${rotM(MS[0]).toLowerCase()} a ${rotM(MS[MS.length - 1]).toLowerCase()} · R$ e % do total`, fonte: `${esc(E().fontes.balanco)} (R$ e % do total). Linhas de detalhe zeradas em todos os meses mostrados foram omitidas. Meses preenchidos na planilha: ${rotM(pre[0])} a ${rotM(pre[pre.length - 1])}.` });
   }
   // ------------------------------------------------------------------ SALDOS E DFC
   function sSaldos() {
@@ -2471,10 +2775,8 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
   function sDFC() {
     if (!M().caixa) return '';
     const f = `${esc(ST.fonte.caixa.arquivo)} › ${esc(ST.fonte.caixa.aba)} (bloco Realizado). Despesas e saídas com sinal negativo.`;
-    return slideAbas('dfc', 'Caixa', 'DFC', [
-      { nome: `acumulado ${periodo()}`, corpo: tabelaDFC('acum'), sub: `Fluxo de caixa realizado de janeiro a ${MESES[ref()].toLowerCase()} · % sobre a receita` },
-      { nome: mesTxt(), corpo: tabelaDFC('mes'), sub: `Fluxo de caixa realizado somente em ${MESES[ref()].toLowerCase()} · % sobre a receita` },
-    ], { fonte: f });
+    return slide('dfc-mes', 'Caixa', `DFC — ${mesTxt()}`, tabelaDFC('mes'), { sub: `Fluxo de caixa realizado somente em ${MESES[ref()].toLowerCase()} · % sobre a receita`, fonte: f }) +
+      slide('dfc-acum', 'Caixa', `DFC — acumulado ${periodo()}`, tabelaDFC('acum'), { sub: `Fluxo de caixa realizado de janeiro a ${MESES[ref()].toLowerCase()} · % sobre a receita`, fonte: f });
   }
   // ------------------------------------------------------------------ DRE MISTO
   const PREMISSAS = [['Faturamento', 'Competência', 'Notas emitidas'], ['CMV', 'Competência', 'Fórmula contábil'], ['Despesa fixa', 'Regime caixa', 'Extrato bancário / ERP'], ['Despesa de venda', 'Regime caixa', 'Extrato bancário / ERP'], ['Despesa tributária', 'Competência', 'Guias']];
@@ -2509,10 +2811,8 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
   function sDRE() {
     if (!M().orc) return '';
     const f = `${esc(ST.fonte.competencia.arquivo)} › ${esc(ST.fonte.competencia.aba)} (orçamento × realizado). Var. em verde = favorável ao resultado; vermelho = desfavorável.`;
-    return slideAbas('dre', 'Resultado', 'DRE misto', [
-      { nome: `acumulado ${periodo()}`, corpo: tabelaDRE('acum'), sub: `Orçado × realizado de janeiro a ${MESES[ref()].toLowerCase()} · despesas com sinal negativo` },
-      { nome: mesTxt(), corpo: tabelaDRE('mes'), sub: `Orçado × realizado somente em ${MESES[ref()].toLowerCase()} · despesas com sinal negativo` },
-    ], { fonte: f });
+    return slide('dre-mes', 'Resultado', `DRE misto — ${mesTxt()}`, tabelaDRE('mes'), { sub: `Orçado × realizado somente em ${MESES[ref()].toLowerCase()} · despesas com sinal negativo`, fonte: f }) +
+      slide('dre-acum', 'Resultado', `DRE misto — acumulado ${periodo()}`, tabelaDRE('acum'), { sub: `Orçado × realizado de janeiro a ${MESES[ref()].toLowerCase()} · despesas com sinal negativo`, fonte: f });
   }
   // médias mensais dos meses com DRE completa → para cada R$ 100 faturados, ponto de equilíbrio
   function dreMedias() {
@@ -2605,8 +2905,10 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
 
   function render() {
     pagina = 0;
-    let h = sCapa() + sOPR() + sResumo() + sFatAnos() + sFatOrc() + sFatMensal() + sFatHist() + sVendasRep() + sProdutos() + sClientes() + sBonif()
-      + sRecebimento() + sPrazo() + sSaldos() + sDFC() + sCompras() + sEstoque() + sPremissas() + sDRE() + sMedias() + sInad() + sTitulos() + sInadCli() + sFoco() + sFim() + sFantasma();
+    // mesma sequência da apresentação da consultora
+    let h = sCapa() + sOPR() + sResumo() + sFatAnos() + sFatOrc() + sFatMensal() + sFatHist() + sVendasRep() + sPremiacao() + sProdutos() + sClientes()
+      + sRecebimento() + sPrazo() + sCompras() + sEstoque() + sBonif() + sBalanco() + sSaldos() + sDFC() + sPremissas() + sDRE() + sMedias()
+      + sInad() + sTitulos() + sInadCli() + sFoco() + sFim() + sFantasma();
     $('#deck').innerHTML = h;
     const secs = {}; document.querySelectorAll('.slide').forEach(s => (secs[s.dataset.secao] = secs[s.dataset.secao] || []).push(s));
     $('#indice').innerHTML = Object.entries(secs).map(([sec, arr]) => `<div class="isec">${esc(sec)}</div>${arr.map(s => `<a href="#${s.id}">${esc(s.dataset.titulo)}</a>`).join('')}`).join('');
@@ -2641,7 +2943,10 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
     if (!e.fat) p.push('faturamento (aba Faturamento)');
     if (!ST.M0) p.push(`DFC de ${ano() - 1} (coluna do ano anterior do OPR)`);
     if (m.caixa) { const f = oprAuto().filter(d => d.falta.length).map(d => `${d.nome.replace(/[^\p{L}\p{N} :]/gu, '').trim()} (${d.falta.map(c => c === 'atual' ? ano() : c === 'ant' ? ano() - 1 : 'orçamento').join(', ')})`); if (f.length) p.push('OPR sem: ' + f.join('; ')); }
-    p.push('acompanhamento de vendas por representante e premiação', 'relatório de prazo médio de recebimento', 'estoque por família (maiores itens)');
+    if (!e.vendas) p.push('acompanhamento de vendas por representante e premiação');
+    if (!e.prazo) p.push('relatório de prazo médio de recebimento');
+    if (!e.estoqueItens) p.push('estoque por família (maiores itens)');
+    if (!e.balanco) p.push('balanço perguntado');
     if (!e.inad) p.push('títulos vencidos (inadimplência)');
     const inc = cmvIncompleto(); if (inc.length) p.push(`CMV não lançado em ${inc.map(x => x.m.toLowerCase()).join(', ')}`);
     if (!(ST.contexto || '').trim()) p.push('contexto do mês informado pela consultoria');
@@ -2659,14 +2964,19 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
       L.push(`mês ${MES3[r]}: ${n(e.fat.real[r])} | orçado ${n(e.fat.orc[r])} | meses acima do orçado: ${MES3.slice(0, r + 1).filter((_, i) => e.fat.real[i] >= e.fat.orc[i]).length} de ${r + 1}`);
       L.push(`por mês ${y}: ${e.fat.real.slice(0, r + 1).map((v, i) => MES3[i] + ' ' + fmtK(v)).join(', ')}`);
     }
+    if (e.vendas) { const v = e.vendas, mv = v.ult, R = v.reps, sm = k => R.reduce((a, x) => a + x[k][mv], 0), cm = R.filter(x => x.meta[mv] > 0); L.push(`\n[VENDAS POR REPRESENTANTE ${MES3[mv]}] venda líquida ${n(sm('liq'))} | meta ${n(sm('meta'))} (${fmtPc(sm('liq') / sm('meta'))}) | na meta ${cm.filter(x => x.liq[mv] >= x.meta[mv]).length} de ${cm.length} | maiores: ${R.slice().sort((a, b) => b.liq[mv] - a.liq[mv]).slice(0, 3).map(x => `${x.nome.slice(0, 20)} ${n(x.liq[mv])}`).join('; ')}`); }
+    if (e.premiacao) { const mv = e.vendas ? e.vendas.ult : r, q = Math.floor(mv / 3), T = e.premiacao.reps.map(x => x.tri[q]).filter(Boolean), me = T.reduce((a, x) => a + x.meta, 0), re = T.reduce((a, x) => a + x.real, 0); L.push(`[PREMIAÇÃO ${q + 1}º TRI, ${mv - q * 3 + 1} de 3 meses] realizado ${n(re)} de ${n(me)} (${fmtPc(me ? re / me : null)}) | prêmio ${n(T.reduce((a, x) => a + x.pr, 0))} (${T.filter(x => x.pr > 0.5).length} representantes)`); }
     if (e.clientes) { const c = e.clientes.lista, t = c.reduce((a, x) => a + x.v, 0); L.push(`\n[CLIENTES] ${c.length} clientes | top 10 = ${fmtPc(c.slice(0, 10).reduce((a, x) => a + x.v, 0) / t)} | maiores: ${c.slice(0, 5).map(x => `${x.nome.slice(0, 28)} ${n(x.v)}`).join('; ')}`); }
     if (e.produtos && e.produtos.acum.length) { const t = e.produtos.acum.reduce((a, x) => a + x.val, 0); L.push(`[PRODUTOS acumulado] ${e.produtos.acum.slice(0, 5).map(x => `${x.desc.slice(0, 30)} ${n(x.val)} (${fmtPc(x.val / t)})`).join('; ')}`); }
     if (e.bonif) { const B = e.bonif.linhas.filter(l => l.mes <= r), c = B.reduce((a, l) => a + l.custo, 0); const mot = {}; B.forEach(l => mot[l.motivo] = (mot[l.motivo] || 0) + l.custo); L.push(`[BONIFICAÇÃO] custo ${n(c)}${e.fat ? ` (${fmtPc(c / ytd(e.fat.real))} do faturamento)` : ''} | maiores motivos: ${Object.entries(mot).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${k.slice(0, 30)} ${n(v)}`).join('; ')}`); }
+    if (e.prazo) { const Z = e.prazo.linhas, mz = Math.max(...Z.filter(x => x.mes <= r).map(x => x.mes)), pm = f => prazoDe(Z.filter(f)), A = pm(x => x.mes <= mz), Mz = pm(x => x.mes === mz), Az = pm(x => x.mes === mz - 1); L.push(`[PRAZO MÉDIO DE RECEBIMENTO] ${MES3[mz]} ${dias(Mz.pm)} dias (mês anterior ${dias(Az.pm)}) | acumulado ${dias(A.pm)} dias | vendas a prazo ${fmtPc(A.aPrazo)} | acima de 60 dias ${fmtPc(A.acima60)}`); }
     const rc = recebimento(); if (rc) L.push(`\n[RECEBIMENTO x FATURAMENTO] recebido ${n(rc.rec)} x faturado ${n(rc.fat)} = ${n(rc.d)} (${fmtP(pct(rc.rec, rc.fat))}) | mês: ${n(rc.recM)} x ${n(rc.fatM)}`);
     if (m.caixa) { const c = m.caixa; L.push(`[DFC acumulado] ${['ENT', 'VAR', 'MC', 'FIX', 'ROA', 'FIN', 'ROD', 'PE', 'PS', 'RET'].filter(k => c.n1[k]).map(k => `${KND.N1NOME[k]} ${n(ytd(c.n1[k].y[y]))}`).join(' | ')}`); L.push(`[DFC mês] ${['ENT', 'MC', 'ROD', 'RET'].map(k => `${KND.N1NOME[k]} ${n(c.n1[k].y[y][r])}`).join(' | ')}`); }
     if (m.bancos) L.push(`[SALDO BANCÁRIO] 31/12/${y - 1}: ${n(m.bancos.total.ini[0])} | fim de ${MES3[r]}: ${n(m.bancos.total.fim[r])} | no mês: ${n(m.bancos.total.fim[r] - m.bancos.total.ini[r])}`);
     if (e.compras && e.fat) L.push(`\n[COMPRAS] acumulado ${n(ytd(e.compras.total))} = ${fmtPc(ytd(e.compras.total) / ytd(e.fat.real))} do faturamento | mês ${n(e.compras.total[r])}`);
-    if (e.estoque) { const t = e.estoque.total; L.push(`[ESTOQUE] ${MES3[r]}: ${n(t[r])} (${fmtP(pct(t[r], t[r - 1]))} no mês; jan ${n(t[0])}) | ${e.estoque.cats.map(c => `${c.nome} ${n(c.v[r])}`).join('; ')}`); }
+    if (e.estoqueItens) { const EI = e.estoqueItens.linhas, me = Math.max(...EI.filter(x => x.mes <= r).map(x => x.mes)), te = e.terceiros, tot = m2 => EI.filter(x => x.mes === m2).reduce((a, x) => a + x.v, 0) + (te ? te.saldo[m2] : 0), cats = {}; EI.filter(x => x.mes === me).forEach(x => cats[x.cat] = (cats[x.cat] || 0) + x.v); const it = {}; EI.filter(x => x.mes === me).forEach(x => { it[x.cod] = it[x.cod] || { d: x.desc, v: 0 }; it[x.cod].v += x.v; }); L.push(`[ESTOQUE ${MES3[me]}] total ${n(tot(me))} (${fmtP(pct(tot(me), tot(me - 1)))} no mês; jan ${n(tot(0))}) | ${Object.entries(cats).map(([k, v]) => `${k} ${n(v)}`).join('; ')}${te ? `; poder de terceiros ${n(te.saldo[me])}` : ''} | maiores itens: ${Object.values(it).sort((a, b) => b.v - a.v).slice(0, 3).map(x => `${x.d.slice(0, 26)} ${n(x.v)}`).join('; ')}`); }
+    else if (e.estoque) { const t = e.estoque.total; L.push(`[ESTOQUE] ${MES3[r]}: ${n(t[r])} (${fmtP(pct(t[r], t[r - 1]))} no mês; jan ${n(t[0])}) | ${e.estoque.cats.map(c => `${c.nome} ${n(c.v[r])}`).join('; ')}`); }
+    if (e.balanco) { const B = e.balanco, k = B.meses.filter(x => x.m <= r || x.ano < y).pop() || B.meses[B.meses.length - 1], li = (arr, re) => { const l = arr.find(x => re.test(norm(x.nome))); return l ? n(l.v[k.i]) : '-'; }; L.push(`[BALANÇO ${MES3[k.m]}/${k.ano}] ativo ${li(B.ativo, /^ativo total/)} | circulante ${li(B.ativo, /^ativo circulante/)} | aplicações ${li(B.ativo, /^aplicac/)} | clientes ${li(B.ativo, /^clientes/)} | estoque ${li(B.ativo, /^estoque de/)} | passivo circulante ${li(B.passivo, /^passivo circulante/)} | PL ${li(B.passivo, /^patrimonio/)}`); }
     if (m.orc) {
       const o = m.orc, s = v => sumTo(v, r);
       L.push(`\n[DRE MISTO acumulado] linha: orçado | realizado`);
@@ -2731,7 +3041,10 @@ DADOS:
     if (!planilhas.length) { if (ST.M) rerenderKeep(); return; }
     $('#status').innerHTML = '<p class="carregando">Lendo arquivos…</p>';
     const t0 = performance.now(), erros = [];
-    const { fonte, lidos } = await KND.carregar(planilhas, e => erros.push(`${e.arquivo}: ${e.erro}`));
+    // relatórios próprios (vendas, produtos, clientes, prazo, estoque, bonificação, balanço…) não passam pela leitura do DFC
+    const apoio = []; for (const f of planilhas) if (await NarrDados.ehApoio(f)) apoio.push(f);
+    const dfcs = planilhas.filter(f => !apoio.includes(f));
+    const { fonte, lidos } = await KND.carregar(dfcs.length ? dfcs : planilhas, e => erros.push(`${e.arquivo}: ${e.erro}`));
     ST.fonte = fonte; ST.M = KND.montarTudo(fonte); erros.push(...ST.M.erros);
     const m = ST.M;
     if (!m.caixa) { $('#status').innerHTML = `<div class="st warn"><b>⚠ Não encontrei o DFC</b><small>Solte o arquivo "DFC ${new Date().getFullYear()} – cliente" com as abas DFC, DRE, Faturamento, Saldos…</small></div>`; return; }
@@ -2744,18 +3057,17 @@ DADOS:
       try { const r0 = await KND.carregar(anteriores, () => { }); const m0 = KND.montarTudo(r0.fonte); if (m0.caixa || m0.orc) { ST.M0 = m0; ST.E0 = await NarrDados.extrair(anteriores, m.ano - 1, m.ref); ST.arqAnt = anteriores.map(f => f.name).join(', '); } } catch (err) { erros.push('DFC do ano anterior: ' + err.message); }
     }
     ST.oprTpl = ST.E.opr ? planilhas.find(f => ST.E.fontes.opr.startsWith(f.name + ' ›')) : null;
-    if (!m.cliente) { const o = ST.E.opr; m.cliente = (o && o.empresa) || (planilhas.map(f => / - ([^.]+)\.xls/i.exec(f.name)).find(Boolean) || [])[1] || ''; }
+    if (!m.cliente) { const o = ST.E.opr; m.cliente = (o && o.empresa) || (dfcs.concat(planilhas).map(f => / - ([^.]+)\.xls/i.exec(f.name)).find(Boolean) || [])[1] || ''; }
     if (ST.nomeCliente) m.cliente = ST.nomeCliente; else ST.nomeCliente = m.cliente;
     $('#cfg-cliente').value = m.cliente || '';
     const e = ST.E, linha = (ok, nome, det) => `<div class="st ${ok ? 'ok' : 'no'}"><b>${ok ? '✓' : '–'} ${esc(nome)}</b><small>${esc(det)}</small></div>`;
-    $('#status').innerHTML = `<div class="st-h">O que foi lido <small>${lidos.length} arquivo(s) · ${Math.round(performance.now() - t0)} ms</small></div>` +
+    $('#status').innerHTML = `<div class="st-h">O que foi lido <small>${planilhas.length} arquivo(s) · ${Math.round(performance.now() - t0)} ms</small></div>` +
       linha(!!m.caixa, 'DFC (caixa)', m.caixa ? `${fonte.caixa.arquivo} › ${fonte.caixa.aba} · até ${MESES[m.ref].toLowerCase()}` : 'não encontrado') +
       linha(!!m.orc, 'DRE (orçado × realizado)', m.orc ? `${fonte.competencia.aba}` : 'não encontrado') +
       linha(!!m.bancos, 'Saldos bancários', m.bancos ? fonte.bancos.aba : 'não encontrado') +
       linha(!!ST.M0, `DFC de ${m.ano - 1} (ano anterior do OPR)`, ST.M0 ? ST.arqAnt : 'solte também o DFC do ano anterior') +
-      [['fat', 'Faturamento'], ['clientes', 'Faturamento por cliente'], ['produtos', 'Faturamento por produto'], ['bonif', 'Bonificação'], ['compras', 'Compras'], ['estoque', 'Estoque'], ['inad', 'Inadimplência']].map(([k, n2]) => linha(!!e[k], n2, e.fontes[k] || 'não encontrado')).join('') +
+      [['fat', 'Faturamento'], ['vendas', 'Vendas por representante'], ['premiacao', 'Premiação do trimestre'], ['produtos', 'Faturamento por produto'], ['clientes', 'Faturamento por cliente'], ['prazo', 'Prazo médio de recebimento'], ['compras', 'Compras'], ['estoqueItens', 'Estoque (posição e família)'], ['bonif', 'Bonificação'], ['balanco', 'Balanço perguntado'], ['inad', 'Inadimplência']].map(([k, n2]) => linha(!!e[k], n2, e.fontes[k] || 'não encontrado')).join('') +
       linha(true, 'OPR', `montado automaticamente (YTD jan–${MES3[m.ref].toLowerCase()})${e.opr ? ' · modelo do Excel: ' + e.fontes.opr : ' · para baixar em Excel, solte a planilha do OPR'}`) +
-      linha(false, 'Vendas por representante', 'pendente – arquivo de acompanhamento de vendas') + linha(false, 'Prazo médio de recebimento', 'pendente – relatório de prazo médio') +
       (m.caixa.avisos.length ? `<div class="st warn"><b>⚠ Conferência</b>${m.caixa.avisos.map(a => `<small>${esc(a)}</small>`).join('')}</div>` : '') +
       (erros.length ? `<div class="st warn"><b>⚠ Não consegui ler</b>${erros.map(a => `<small>${esc(a)}</small>`).join('')}</div>` : '');
     ST.edit = {}; ST.abas = {}; jaAnimou.clear();
