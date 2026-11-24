@@ -284,7 +284,7 @@ body.apresentando main{padding-bottom:60px}
     <p class="hint">Vai junto com os números para o agente Intragen explicar as variações.</p>
     <h5 class="so-pronto">Sumário</h5><nav id="indice"></nav>
     <p class="hint">Os arquivos são lidos só neste navegador. Nada é enviado para a internet.</p>
-    <p class="hint" style="opacity:.7">Versão 24/11/2026 10:47</p>
+    <p class="hint" style="opacity:.7">Versão 24/11/2026 11:54</p>
   </aside>
   <main>
     <div id="drop">
@@ -2305,11 +2305,33 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
     const cl = sl.cloneNode(true); cl.classList.remove('anim', 'atual', 'flash'); cl.style.zoom = ''; cl.style.transform = 'none'; cl.style.margin = '0';
     cl.querySelectorAll('[contenteditable]').forEach(x => x.removeAttribute('contenteditable'));
     const w = sl.offsetWidth, h = sl.offsetHeight;
+    // fotos de fundo (capa e encerramento): o Mac não carrega a imagem de fundo dentro do desenho do slide,
+    // então a página desenha a foto direto no quadro e tira o fundo da cópia
+    const base = sl.getBoundingClientRect(), fundos = [];
+    const orig = [...sl.querySelectorAll('[style*="background-image"]')], copia = [...cl.querySelectorAll('[style*="background-image"]')];
+    for (let i = 0; i < orig.length; i++) {
+      const u = /url\(["']?(.*?)["']?\)/.exec(orig[i].style.backgroundImage || ''); if (!u) continue;
+      const fi = new Image(); fi.src = u[1];
+      try { await (fi.decode ? fi.decode() : new Promise((r, j) => { fi.onload = r; fi.onerror = j; })); } catch (e) { continue; }
+      const r = orig[i].getBoundingClientRect();
+      fundos.push({ fi, x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height });
+      if (copia[i]) { copia[i].style.backgroundImage = 'none'; copia[i].style.backgroundColor = 'transparent'; }
+    }
+    if (fundos.length) cl.style.background = 'transparent'; // o quadro já começa branco; o fundo do slide cobriria a foto
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="width:${w}px"><style>${css}</style>${new XMLSerializer().serializeToString(cl)}</div></foreignObject></svg>`;
     const img = new Image();
     await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error('não consegui desenhar o slide ' + (sl.dataset.titulo || ''))); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); });
     const c = document.createElement('canvas'); c.width = w * escala; c.height = h * escala;
-    const g = c.getContext('2d'); g.scale(escala, escala); g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.drawImage(img, 0, 0);
+    const g = c.getContext('2d'); g.scale(escala, escala);
+    const pintar = () => {
+      g.fillStyle = '#fff'; g.fillRect(0, 0, w, h);
+      fundos.forEach(f => { const k = Math.max(f.w / f.fi.naturalWidth, f.h / f.fi.naturalHeight), dw = f.fi.naturalWidth * k, dh = f.fi.naturalHeight * k; g.save(); g.beginPath(); g.rect(f.x, f.y, f.w, f.h); g.clip(); g.drawImage(f.fi, f.x, f.y + (f.h - dh) / 2, dw, dh); g.restore(); });
+      g.drawImage(img, 0, 0);
+    };
+    pintar();
+    // segunda passada: dá tempo para os logos dentro do slide terminarem de carregar (Mac)
+    try { if (img.decode) await img.decode(); } catch (e) { }
+    await new Promise(r => setTimeout(r, 120)); pintar();
     const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
     return { bytes: new Uint8Array(await blob.arrayBuffer()), w, h };
   }
@@ -3094,6 +3116,9 @@ DADOS:
   }
   function baixarPDF() {
     if (!ST.M) return;
+    // Safari ignora o tamanho de página deitado: avisa antes de abrir a impressão
+    if (/^((?!chrome|chromium|crios|edg|android).)*safari/i.test(navigator.userAgent) &&
+      !confirm('No Safari o PDF sai em pé (com meia folha em branco em cada slide).\n\nNa janela de impressão, clique em "Mostrar detalhes" e escolha Orientação: PAISAGEM (o ícone deitado).\n\nNo Google Chrome isso não é necessário: o PDF já sai deitado.\n\nClique em OK para abrir a impressão.')) return;
     const estava = document.body.classList.contains('apresentando'); if (estava) apresentar(false);
     ST.imprimir = true; render();
     // slide mais alto que uma folha A4 deitada: reduz para caber numa página só
