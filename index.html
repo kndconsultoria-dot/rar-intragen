@@ -283,7 +283,7 @@ body.apresentando main{padding-bottom:60px}
     <p class="hint">Vai junto com os números para o agente Intragen explicar as variações.</p>
     <h5 class="so-pronto">Sumário</h5><nav id="indice"></nav>
     <p class="hint">Os arquivos são lidos só neste navegador. Nada é enviado para a internet.</p>
-    <p class="hint" style="opacity:.7">Versão 23/11/2026 21:44</p>
+    <p class="hint" style="opacity:.7">Versão 23/11/2026 22:00</p>
   </aside>
   <main>
     <div id="drop">
@@ -2101,8 +2101,8 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
   // ---------------------------------------------------------------- OPR em Excel: grava no próprio modelo da consultoria (formatação intacta)
   async function baixarOPR() {
     if (!ST.M) return alert('Carregue os arquivos primeiro.');
-    if (!ST.oprTpl) return alert('Para baixar o OPR em Excel, solte junto a planilha do OPR de qualquer mês: ela serve de modelo (a formatação fica igual).');
     const linhas = oprAuto(), y = ano();
+    if (!ST.oprTpl) return baixarArquivo(oprNovo(linhas), `OPR ${M().cliente || ''} ${MESES[ref()]} - ${y}.xlsx`);
     const ents = await KND.zipTodos(new Uint8Array(await ST.oprTpl.arrayBuffer()));
     const dec = new TextDecoder(), enc = new TextEncoder(), get = n => { const x = ents.find(z => z.name === n); return x ? dec.decode(x.bytes) : ''; };
     const put = (n, t) => { const x = ents.find(z => z.name === n); if (x) x.bytes = enc.encode(t); };
@@ -2211,6 +2211,59 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `RAR ${M().cliente || ''} ${MESES[ref()]} - ${ano()}.pptx`.replace(/\s+/g, ' ');
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
     aviso(`✓ PowerPoint gerado (${imgs.length} slides)`); setTimeout(() => t.classList.remove('on'), 3500);
+  }
+  function baixarArquivo(blob, nome) {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nome.replace(/\s+/g, ' ');
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+  }
+  // OPR em Excel sem modelo: monta a planilha no formato KND (faixa azul, emojis, status em amarelo, variações em fórmula)
+  function oprNovo(linhas) {
+    const y = ano(), enc = new TextEncoder(), X = s2 => enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + s2);
+    const xe = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const tx = (r, st, t) => `<c r="${r}" s="${st}" t="inlineStr"><is><t xml:space="preserve">${xe(t)}</t></is></c>`;
+    const nu = (r, st, v) => v == null ? `<c r="${r}" s="${st}"/>` : `<c r="${r}" s="${st}"><v>${v}</v></c>`;
+    const fo = (r, st, f) => `<c r="${r}" s="${st}"><f>${xe(f)}</f></c>`;
+    const iaTxt = d => { const k = norm(d.nome).replace(/[^a-z ]/g, '').trim(); const mm = (ST.copilot.OPR || '').split('\n').map(l => /^[-•*]?\s*([^:]{3,70}):\s*(.+)$/.exec(l.trim())).filter(Boolean).find(x => { const k2 = norm(x[1]).replace(/[^a-z ]/g, '').trim(); return k2 && (k.includes(k2) || k2.includes(k)); }); return mm ? mm[2] : ''; };
+    let rows = '';
+    [['Empresa:', M().cliente || ''], ['Período:', oprPeriodo()], ['Comparativo:', `YTD ${y} vs. YTD ${y - 1} vs. Orçamento ${y}`]].forEach(([a, b], i) => { rows += `<row r="${i + 1}" ht="16" customHeight="1">${tx('A' + (i + 1), 1, a)}${tx('B' + (i + 1), 2, b)}${[...'CDEFGHI'].map(c => `<c r="${c}${i + 1}" s="2"/>`).join('')}</row>`; });
+    rows += `<row r="4" ht="34" customHeight="1">${tx('A4', 3, ' ')}${tx('B4', 3, String(y))}${tx('C4', 3, String(y - 1))}${tx('D4', 3, 'Orçamento ' + y)}${tx('E4', 3, 'Var vs. ' + (y - 1))}${tx('F4', 3, 'Var vs. Orç')}${tx('G4', 3, 'Comentário Estratégico')}<c r="H4" s="0"/>${tx('I4', 3, 'Status de atualização')}</row>`;
+    linhas.forEach((d, i) => {
+      const r = i + 5, st = d.f === 'P' ? 6 : d.f === 'N' ? 10 : 5, rd = v => v == null ? null : Math.round(v * (d.f === 'P' ? 1e4 : 100)) / (d.f === 'P' ? 1e4 : 100);
+      const aviso = [d.falta.length ? `Falta: ${d.falta.map(c => c === 'atual' ? y : c === 'ant' ? y - 1 : 'orçamento').join(', ')}` : '', d.cmvAviso].filter(Boolean).join(' · ');
+      rows += `<row r="${r}" ht="30" customHeight="1">${tx('A' + r, 4, d.nome)}${nu('B' + r, st, rd(d.atual))}${nu('C' + r, st, rd(d.ant))}${nu('D' + r, st, rd(d.orc))}`
+        + fo('E' + r, 7, `IF(OR(B${r}="",C${r}="",C${r}=0),"",(B${r}-C${r})/ABS(C${r}))`) + fo('F' + r, 7, `IF(OR(B${r}="",D${r}="",D${r}=0),"",(B${r}-D${r})/ABS(D${r}))`)
+        + tx('G' + r, 8, [iaTxt(d), aviso].filter(Boolean).join(' | ')) + `<c r="H${r}" s="0"/>` + tx('I' + r, 9, d.status) + '</row>';
+    });
+    const cols = [[1, 44], [2, 15], [3, 15], [4, 16], [5, 11], [6, 11], [7, 50], [8, 3], [9, 13]].map(([c, w]) => `<col min="${c}" max="${c}" width="${w}" customWidth="1"/>`).join('');
+    const sheet = `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView workbookViewId="0" showGridLines="0"/></sheetViews><sheetFormatPr defaultRowHeight="15"/><cols>${cols}</cols><sheetData>${rows}</sheetData><pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup orientation="landscape" paperSize="9" fitToWidth="1" fitToHeight="1"/></worksheet>`;
+    const navy = 'FF0C3F76', bd = '<border><left style="thin"><color rgb="FF0C3F76"/></left><right style="thin"><color rgb="FF0C3F76"/></right><top style="thin"><color rgb="FF0C3F76"/></top><bottom style="thin"><color rgb="FF0C3F76"/></bottom><diagonal/></border>';
+    const styles = `<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="2"><numFmt numFmtId="164" formatCode="#,##0"/><numFmt numFmtId="165" formatCode="0.0%"/></numFmts>
+<fonts count="5"><font><sz val="10"/><name val="Aptos"/></font><font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Aptos"/></font><font><b/><sz val="10"/><name val="Aptos"/></font><font><sz val="11"/><name val="Aptos"/></font><font><b/><sz val="9"/><name val="Aptos Display"/></font></fonts>
+<fills count="5"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="${navy}"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFD9D9D9"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFFF00"/><bgColor indexed="64"/></patternFill></fill></fills>
+<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>${bd}</borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="11">
+<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>
+<xf numFmtId="0" fontId="2" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1"/>
+<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="3" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>
+<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="10" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="165" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="4" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="1" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+    const files = [
+      ['[Content_Types].xml', X('<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>')],
+      ['_rels/.rels', X('<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>')],
+      ['xl/workbook.xml', X(`<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="OPR ${xe(MES3[ref()])}_${y}" sheetId="1" r:id="rId1"/></sheets><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>`)],
+      ['xl/_rels/workbook.xml.rels', X('<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>')],
+      ['xl/worksheets/sheet1.xml', X(sheet)],
+      ['xl/styles.xml', X(styles)],
+    ];
+    return zipBytes(files);
   }
   const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
   const crc32 = u8 => { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
