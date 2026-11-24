@@ -222,9 +222,31 @@ body.apresentando main{padding-bottom:60px}
 .iat.up i{background:#e0f2ef;color:#0A8A8F}.iat.down i{background:#fbe9e6;color:#B5473A}.iat.neu i{background:#e3f1fa;color:#0E6EAF}
 .iat b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#5d6d7b;margin-bottom:1px}
 .iat em{font-style:normal;font-weight:700;color:#14283B}.iat.up em{color:#0A8A8F}.iat.down em{color:#B5473A}
+/* ---------- animações sutis ---------- */
+@keyframes kSubir{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes kCrescer{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes kCrescerH{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes kTracar{from{stroke-dashoffset:2400}to{stroke-dashoffset:0}}
+@keyframes kSurgir{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:no-preference){
+  .slide.anim .nh{animation:kSurgir .5s ease both}
+  .slide.anim .ncard,.slide.anim .prem,.slide.anim .pendente,.slide.anim .iabox{animation:kSubir .55s cubic-bezier(.2,.7,.2,1) both}
+  .slide.anim .ncard:nth-child(2),.slide.anim .prem:nth-child(2){animation-delay:.08s}.slide.anim .ncard:nth-child(3),.slide.anim .prem:nth-child(3){animation-delay:.16s}
+  .slide.anim .ncard:nth-child(4),.slide.anim .prem:nth-child(4){animation-delay:.24s}.slide.anim .ncard:nth-child(5),.slide.anim .prem:nth-child(5){animation-delay:.32s}
+  .slide.anim .ncard:nth-child(n+6){animation-delay:.4s}
+  .slide.anim .callout{animation:kSubir .6s .25s cubic-bezier(.2,.7,.2,1) both}
+  .slide.anim .iat{animation:kSubir .45s cubic-bezier(.2,.7,.2,1) both}.slide.anim .iat:nth-of-type(1){animation-delay:.45s}.slide.anim .iat:nth-of-type(2){animation-delay:.6s}.slide.anim .iat:nth-of-type(3){animation-delay:.75s}
+  .slide.anim svg.chart rect:not(.hb),.slide.anim svg.chart path[data-tip]{transform-box:fill-box;transform-origin:50% 100%;animation:kCrescer .7s cubic-bezier(.2,.7,.2,1) both}
+  .slide.anim svg.chart rect.hb{transform-box:fill-box;transform-origin:0 50%;animation:kCrescerH .7s cubic-bezier(.2,.7,.2,1) both}
+  .slide.anim svg.chart polyline{stroke-dasharray:2400;animation:kTracar 1.4s ease-out both}
+  .slide.anim svg.chart text,.slide.anim svg.chart circle{animation:kSurgir .4s .55s ease both}
+  .slide.anim .tb tbody tr,.slide.anim .opr-x tbody tr{animation:kSurgir .35s ease both}
+  .slide.anim .r100>div{transform-origin:0 50%;animation:kCrescerH .8s cubic-bezier(.2,.7,.2,1) both}
+}
+@media print{*,*:before,*:after{animation:none!important}}
 /* ---------- impressão / PDF ---------- */
 @media print{
-  @page{size:A4 landscape;margin:0}
+  @page{size:297mm 210mm;margin:0}@page{size:A4 landscape;margin:0}
   body{background:#fff} .top,aside,#copilot,#drop,#tip{display:none!important}
   .wrap{display:block} main{padding:0;overflow:visible} #deck{gap:0;display:block}
   .slide{width:297mm;min-height:210mm;box-shadow:none;border-radius:0;break-after:page;page-break-after:always}
@@ -260,7 +282,7 @@ body.apresentando main{padding-bottom:60px}
     <p class="hint">Vai junto com os números para o agente Intragen explicar as variações.</p>
     <h5 class="so-pronto">Sumário</h5><nav id="indice"></nav>
     <p class="hint">Os arquivos são lidos só neste navegador. Nada é enviado para a internet.</p>
-    <p class="hint" style="opacity:.7">Versão 23/11/2026 20:52</p>
+    <p class="hint" style="opacity:.7">Versão 23/11/2026 21:07</p>
   </aside>
   <main>
     <div id="drop">
@@ -1968,7 +1990,7 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
       const w = Math.abs(it.v) / max * (W - padL - padR), y = 3 + i * rowH;
       const mx = o.maxCh || 28, nome = it.rot.length > mx ? it.rot.slice(0, mx - 1) + '…' : it.rot;
       s += `<text x="${padL - 8}" y="${y + rowH / 2 + 4}" text-anchor="end" class="x">${esc(nome)}</text>`;
-      s += `<rect x="${padL}" y="${y + 4}" width="${Math.max(1, w)}" height="${rowH - 9}" rx="3" fill="${it.cor || C.azul}" data-tip="${esc(it.rot)}: ${esc((o.fmt || fmtR)(it.v))}"/>`;
+      s += `<rect class="hb" x="${padL}" y="${y + 4}" width="${Math.max(1, w)}" height="${rowH - 9}" rx="3" fill="${it.cor || C.azul}" data-tip="${esc(it.rot)}: ${esc((o.fmt || fmtR)(it.v))}"/>`;
       s += `<text x="${padL + w + 6}" y="${y + rowH / 2 + 4}" class="vs">${esc((o.fmt || fmtC)(it.v))}</text>`;
     });
     return s + '</svg>';
@@ -2491,7 +2513,15 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
         rerenderKeep();
       });
     });
+    animarAoVer();
     if (document.body.classList.contains('apresentando')) irPara(atual);
+  }
+  const jaAnimou = new Set(); let obs = null;
+  function animarAoVer() {
+    if (obs) obs.disconnect();
+    if (!('IntersectionObserver' in window)) return;
+    obs = new IntersectionObserver(ents => ents.forEach(en => { if (en.isIntersecting && !jaAnimou.has(en.target.id)) { jaAnimou.add(en.target.id); en.target.classList.add('anim'); obs.unobserve(en.target); } }), { threshold: 0.2 });
+    document.querySelectorAll('#deck .slide').forEach(sl => { if (!jaAnimou.has(sl.id)) obs.observe(sl); });
   }
   function rerenderKeep() { const y = window.scrollY; render(); if (!document.body.classList.contains('apresentando')) window.scrollTo(0, y); }
 
@@ -2620,7 +2650,7 @@ DADOS:
       linha(false, 'Vendas por representante', 'pendente – arquivo de acompanhamento de vendas') + linha(false, 'Prazo médio de recebimento', 'pendente – relatório de prazo médio') +
       (m.caixa.avisos.length ? `<div class="st warn"><b>⚠ Conferência</b>${m.caixa.avisos.map(a => `<small>${esc(a)}</small>`).join('')}</div>` : '') +
       (erros.length ? `<div class="st warn"><b>⚠ Não consegui ler</b>${erros.map(a => `<small>${esc(a)}</small>`).join('')}</div>` : '');
-    ST.edit = {}; ST.abas = {};
+    ST.edit = {}; ST.abas = {}; jaAnimou.clear();
     document.body.classList.add('pronto');
     document.title = `KND · ${m.cliente || 'RAR'} · ${MESES[m.ref]}/${m.ano}`;
     render();
@@ -2633,6 +2663,7 @@ DADOS:
     const ss = slides(); if (!ss.length) return;
     atual = Math.max(0, Math.min(ss.length - 1, i));
     ss.forEach((s2, k) => s2.classList.toggle('atual', k === atual));
+    const sl = ss[atual]; sl.classList.remove('anim'); void sl.offsetWidth; sl.classList.add('anim'); jaAnimou.add(sl.id);
     $('#pcont').textContent = `${atual + 1} / ${ss.length}`; $('#ptit').textContent = ss[atual].dataset.titulo;
     ajustarEscala(); window.scrollTo(0, 0);
   }
@@ -2645,6 +2676,8 @@ DADOS:
     if (!ST.M) return;
     const estava = document.body.classList.contains('apresentando'); if (estava) apresentar(false);
     ST.imprimir = true; render();
+    // slide mais alto que uma folha A4 deitada: reduz para caber numa página só
+    slides().forEach(sl => { const h = sl.offsetHeight, lim = 750 * sl.offsetWidth / 1120; if (h > lim) sl.style.zoom = (lim / h).toFixed(3); });
     const voltar = () => { ST.imprimir = false; rerenderKeep(); window.removeEventListener('afterprint', voltar); };
     window.addEventListener('afterprint', voltar);
     setTimeout(() => window.print(), 60);
@@ -2670,7 +2703,7 @@ DADOS:
       if (/\[(RESUMO|FATURAMENTO)\]/.test(v)) return $('#cp-aplicar').click();
       $('#cp-msg').innerHTML = `<span class="alerta">O que foi colado não é a leitura do agente. Na resposta do agente Intragen, selecione o texto com o mouse (do [RESUMO] até o fim), aperte Ctrl+C e cole aqui de novo.</span>`;
     }, 50));
-    $('#cp-aplicar').onclick = () => { const n = aplicarResposta($('#cp-resposta').value); $('#cp-msg').textContent = n ? `✓ ${n} blocos aplicados.` : 'Não encontrei os marcadores [RESUMO], [FATURAMENTO]… na resposta.'; if (n) { rerenderKeep(); fecharEMostrar(n); } };
+    $('#cp-aplicar').onclick = () => { const n = aplicarResposta($('#cp-resposta').value); $('#cp-msg').textContent = n ? `✓ ${n} blocos aplicados.` : 'Não encontrei os marcadores [RESUMO], [FATURAMENTO]… na resposta.'; if (n) { jaAnimou.clear(); rerenderKeep(); fecharEMostrar(n); } };
     $('#btn-pdf').onclick = baixarPDF;
     $('#btn-opr').onclick = () => baixarOPR().catch(err => alert('Não consegui gerar o OPR: ' + err.message));
     $('#link-agente').href = AGENTE_INTRAGEN;
