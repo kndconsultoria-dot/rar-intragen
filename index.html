@@ -284,7 +284,7 @@ body.apresentando main{padding-bottom:60px}
     <p class="hint">Vai junto com os números para o agente Intragen explicar as variações.</p>
     <h5 class="so-pronto">Sumário</h5><nav id="indice"></nav>
     <p class="hint">Os arquivos são lidos só neste navegador. Nada é enviado para a internet.</p>
-    <p class="hint" style="opacity:.7">Versão 24/11/2026 11:54</p>
+    <p class="hint" style="opacity:.7">Versão 24/11/2026 12:07</p>
   </aside>
   <main>
     <div id="drop">
@@ -2081,7 +2081,7 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
   function leitura(chave, titulo, texto, tom = 'info', marcador) {
     const ia = marcador && ST.copilot[marcador];
     if (ia) {
-      const html = `<div class="iah">✦ Análise KND 3.0 · Agente</div>${topicosIA(ia)}`;
+      const html = `<div class="iah">✦ Análise KND</div>${topicosIA(ia)}`;
       return `<div class="callout ia3"><div class="ed" contenteditable="true" data-ed="${chave}">${ST.edit[chave] != null ? ST.edit[chave] : html}</div></div>`;
     }
     const html = `<b>${esc(titulo)}</b><p>${texto}</p>`;
@@ -2905,7 +2905,7 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
     const faltam = pendencias();
     const ul = (arr, ph) => arr.length ? `<ul>${arr.map(l => `<li>${esc(l.replace(/^[▲▼●]\s*/, ''))}</li>`).join('')}</ul>` : `<p class="ph">${ph}</p>`;
     return slide('foco', 'Fechamento', 'Pontos de atenção e próximos passos', `<div class="duo"><div class="iabox"><h4>Foco da diretoria</h4>${ul(foco.length ? foco : auto, 'Gere a análise do agente para preencher.')}</div><div class="iabox"><h4>Pendências de informação</h4>${ul(pend.length ? pend : faltam, 'Nenhuma pendência.')}</div></div>`,
-      { sub: foco.length ? 'Análise KND 3.0 · Agente, revisada pela consultoria' : 'Pontos automáticos a partir dos números · gere a análise do agente para completar' });
+      { sub: foco.length ? 'Análise KND, revisada pela consultoria' : 'Pontos automáticos a partir dos números · gere a análise do agente para completar' });
   }
   // SLIDE FANTASMA: o que vai para o agente + os apontamentos dele para a consultora (não entra na apresentação nem no PDF)
   function sFantasma() {
@@ -2916,7 +2916,7 @@ if (typeof module !== 'undefined') module.exports = NarrDados;
       <div class="fx">👻 Slide fantasma · só para a consultora · não aparece no ▶ Apresentar nem no PDF</div>
       <header class="nh"><div><h2>Bastidores da RAR</h2><p class="nsub">O que vai para o agente Intragen e o que ele aponta antes da reunião</p></div></header>
       <div class="sb"><div class="duo">
-        <div><h4 class="h4">Apontamentos do agente Intragen</h4>${ap.length ? `<div class="callout ia3"><div class="iah">✦ Análise KND 3.0 · Agente</div>${topicosIA(ap.join('\n'), 8)}</div>` : '<p class="ph">Clique em ✦ Gerar leitura. Além da leitura de cada slide, o agente Intragen devolve aqui as críticas: números que merecem checagem, inconsistências entre as fontes, perguntas que a diretoria provavelmente vai fazer e o que falta para a análise ficar completa.</p>'}
+        <div><h4 class="h4">Apontamentos do agente Intragen</h4>${ap.length ? `<div class="callout ia3"><div class="iah">✦ Análise KND</div>${topicosIA(ap.join('\n'), 8)}</div>` : '<p class="ph">Clique em ✦ Gerar leitura. Além da leitura de cada slide, o agente Intragen devolve aqui as críticas: números que merecem checagem, inconsistências entre as fontes, perguntas que a diretoria provavelmente vai fazer e o que falta para a análise ficar completa.</p>'}
           <h4 class="h4" style="margin-top:16px">Pendências que a página encontrou</h4><ul class="apt">${pendencias().map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>
         <div><h4 class="h4">Dados enviados ao agente <small class="hint">${txt.length.toLocaleString('pt-BR')} caracteres</small></h4><pre class="pk">${esc(txt)}</pre></div>
       </div></div></section>`;
